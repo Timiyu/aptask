@@ -1,11 +1,15 @@
-from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore, register_events
+# -*- coding:utf-8 -*-
+from django.http import JsonResponse
+from django.views.generic.base import View
 
-# 实例化调度器
-scheduler = BackgroundScheduler()
-# 调度器使用默认的DjangoJobStore()
-scheduler.add_jobstore(DjangoJobStore(), 'default')
 
-scheduler.add_job()
+class Schedule(View):
 
-scheduler.start()
+    def get(self, request):
+        return JsonResponse({'1': '1'})
+
+    def post(self, request):
+        return JsonResponse({'1': '1'})
+
+    def delete(self, request):
+        return JsonResponse({'1': '1'})

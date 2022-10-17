@@ -20,8 +20,14 @@
                         </el-form-item>
                         <el-form-item align="middle">
                             <el-row type="flex" justify="space-between" align="middle">
-                                <el-col :span="18">
+                                <el-col :span="6">
                                     <el-button type="success" @click="userLogin" icon="el-icon-position">立即登录</el-button>
+                                </el-col>
+                                <el-col :span="6">
+                                    <el-divider>或</el-divider>
+                                </el-col>
+                                <el-col :span="6">
+                                    <el-button type="danger" icon="el-icon-plus" @click="userRegister">注册</el-button>
                                 </el-col>
                             </el-row>
                         </el-form-item>
