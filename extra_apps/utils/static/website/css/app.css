@@ -1,0 +1,109 @@
+body {
+    min-width: 1366px;
+    font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+}
+
+.btn:focus {
+    outline: none !important;
+}
+
+.el-button:focus{
+    outline: none !important;
+}
+
+.navbar {
+    padding: 1rem 0.125rem;
+    height: 3rem;
+    background-color: #aa08c2;
+}
+
+.brand-logo {
+    width: 10rem;
+    height: 2.5rem;
+}
+
+.brand-logo:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+}
+
+#search-input {
+    width: 15rem;
+    background-color: rgba(255, 255, 255, 0.76)
+}
+
+#search-button {
+    border-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.76);
+}
+
+#search-button:hover {
+    border: 3px solid #40ecff;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.user-avatar {
+    height: 2rem;
+    width: 2rem;
+    border: 1px solid #40ecff;
+}
+
+.nav-item {
+    margin: 4px;
+    border-radius: 5px;
+}
+
+.nav-item .active {
+    color: #40ecff;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.nav-link {
+    border-radius: 5px;
+    color: #ffffff;
+}
+
+.nav-link:active {
+    color: #40ecff;
+}
+
+.nav-link:hover {
+    color: #40ecff;
+    border-radius: 5px;
+}
+
+a:hover, a.show {
+    color: #40ecff;
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+    color: #40ecff;
+    background-color: #f8f6f6;
+}
+
+.dropdown-item.active, .dropdown-item:active {
+    color: #40ecff;
+    text-decoration: none;
+    background-color: #f8f6f6;
+}
+
+.service-img {
+    border: 1px solid #f1f6f6;
+    height: 60px;
+    width: 60px;
+    border-radius: 20%;
+    background-color: #fdfbfb;
+}
+
+.service-tag {
+    border-radius: 30px;
+}
+
+.service-desc, .update-time {
+    color: #909399;
+    font-size: 14px;
+}

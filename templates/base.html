@@ -1,0 +1,52 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}/ATest</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta content="Python定时任务管理平台" name="description"/>
+    <meta content="新蝶" name="author"/>
+    <meta content="定时任务管理" name="keywords"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static '/website/images/favicon.ico' %}"/>
+
+    <!-- Bootstrap4 -->
+    <link href="{% static 'website/css/bootstrap/bootstrap.min.css' %}" rel="stylesheet" type="text/css"/>
+
+    <!-- element-ui -->
+    <link href="{% static 'website/css/element-ui/theme-chalk/index.css' %}" rel="stylesheet" type="text/css"/>
+
+    <!-- app.css -->
+    <link href="{% static 'website/css/app.css' %}" rel="stylesheet" type="text/css"/>
+
+    <!-- 引入vue框架 -->
+    <script src="{% static 'website/js/vue/vue.js' %}"></script>
+    <script src="{% static 'website/js/axios/dist/axios.js' %}"></script>
+    <!-- 引入element组件库 -->
+    <script src="{% static 'website/js/element-ui/lib/index.js' %}"></script>
+
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+    {% block css %}{% endblock %}
+</head>
+<body>
+{% block header %}
+    {% include 'header.html' %}
+{% endblock %}
+{% block content %}{% endblock %}
+{% block footer %}
+    {% include 'footer.html' %}
+{% endblock %}
+<script src="{% static 'website/js/jquery/jquery.slim.min.js' %}"></script>
+<script src="{% static 'website/js/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'website/js/app.js' %}"></script>
+{% block javascript %}{% endblock %}
+</body>
+</html>

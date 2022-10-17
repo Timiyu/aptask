@@ -1,0 +1,40 @@
+{% block title %}服务器错误{% endblock %}
+{% block content %}
+    <section>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+
+                <div class="wrapper-page">
+                    <div class="account-pages">
+                        <div class="account-box bg-transparent shadow-none">
+
+                            <!-- Logo Box -->
+                            <div class="account-logo-box">
+                                <h2 class="text-uppercase text-center">
+                                    <a href="{% url 'website:index' %}" class="text-success">
+                                            <span><img src="{% static 'website/images/logo_gitlab.png' %}" alt=""
+                                                       height="72"></span>
+                                    </a>
+                                </h2>
+                            </div>
+
+                            <div class="account-content text-center">
+                                <h1 class="text-error">500</h1>
+                                <h4 class="text-uppercase text-danger mt-3">服务器发生错误</h4>
+                                <p class="text-white-50 mt-3"></p>
+                                <a class="btn btn-primary mt-3" href="{% url 'website:index' %}"><i
+                                        class="mdi mdi-home mr-1"></i> 返回首页</a>
+                            </div> <!-- end account-content -->
+
+                        </div> <!-- end account-box -->
+                    </div>
+                    <!-- end account-page-->
+                </div>
+                <!-- end wrapper-page -->
+
+            </div> <!-- end col -->
+        </div> <!-- end row -->
+    </div> <!-- end container -->
+</section>
+{% endblock %}

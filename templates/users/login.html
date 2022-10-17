@@ -1,0 +1,91 @@
+{% extends 'users/base.html' %}
+{% load static %}
+{% block title %}用户登录{% endblock %}
+{% block content %}
+        <div id="userLogin" class="container" v-cloak>
+            <el-row type="flex" align="middle" justify="center">
+                <el-col :span="10">
+                    <el-row type="flex" align="middle" justify="center">
+                        <img style="width: 200px;" src="{% static 'website/images/logo_gitlab.png' %}">
+                    </el-row>
+                    <el-form label-position="left" label-width="80px" style="margin-top:20px;" :model="user">
+                        <el-form-item label="账号" prop="username">
+                            <el-input v-model="user.username" placeholder="输入用户名/邮箱" suffix-icon="el-icon-user"></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码" prop="password">
+                            <el-input v-model="user.password" placeholder="输入密码" show-password></el-input>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-checkbox v-model="user.remember">记住我7天</el-checkbox>
+                        </el-form-item>
+                        <el-form-item align="middle">
+                            <el-row type="flex" justify="space-between" align="middle">
+                                <el-col :span="18">
+                                    <el-button type="success" @click="userLogin" icon="el-icon-position">立即登录</el-button>
+                                </el-col>
+                            </el-row>
+                        </el-form-item>
+                    </el-form>
+                </el-col>
+            </el-row>
+        </div>
+{% endblock %}
+{% block javascript %}
+    <script>
+        let login = new Vue({
+            el: '#userLogin',
+            data: {
+                user: {username: '', password: '', remember:false},
+            },
+            
+            methods: {
+                userLogin: function () {
+                    let crypto_password = ps_encrypt(this.user.password, "{{ public_key|safe }}");
+                    axios({
+                        url: "{% url 'users:login' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {
+                            username:this.user.username,
+                            password:crypto_password,
+                            remember:this.user.remember
+                        },
+                    }).then(response => {
+                        if(response.data.code==='success'){
+                            let next_url = '{{ request.GET.next }}';
+                            console.log('{{ user }}');
+                            if(next_url !== ''){
+                                window.location.href = next_url;
+                            }else{
+                                window.location.href = "{% url 'website:index' %}";
+                            }
+                        }else{
+                            this.$notify({
+                                title: '错误',
+                                message: '登录失败:用户名或密码错误！',
+                                type: 'error',
+                                iconClass: 'el-icon-error'
+                            });
+                        }
+                    }).catch(error => {
+                        console.log(error)
+                        this.$notify({
+                            title: '错误',
+                            message: '登录失败',
+                            type: 'error',
+                            iconClass: 'el-icon-error'
+                        });
+                    })
+                },
+
+                userRegister:function (){
+                    window.location.href = "{% url 'users:register' %}";
+                }
+            }
+        })
+    </script>
+{% endblock %}
