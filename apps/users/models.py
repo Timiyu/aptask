@@ -1,15 +1,14 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from datetime import datetime
 
 
 # Create your models here.
-class ExtendUser(models.Model):
+class AdminUser(AbstractUser):
     gender_choices = (
         ('male', '男'),
         ('female', '女')
     )
-    user = models.OneToOneField(User, on_delete=models.DO_NOTHING)
     nick_name = models.CharField('昵称', max_length=50, default='')
     birthday = models.DateField('生日', null=True, blank=True)
     gender = models.CharField('性别', max_length=10, choices=gender_choices, default='1')

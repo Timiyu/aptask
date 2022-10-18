@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 import os
 import sys
+from turtle import settiltangle
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,13 +30,15 @@ sys.path.insert(0, os.path.join(BASE_DIR, 'extra_apps'))
 SECRET_KEY = 'django-insecure-h%i80y9v2pxac=makx&vi3^4yef9_n5lw=feu&@us21i!*6@%0'
 
 # 密码加密解密公钥私钥
-LOGIN_PRIVATE_KEY = os.path.join(BASE_DIR, "extra_apps/utils/password_cert/rsa_private.pem")
-LOGIN_PUBLIC_KEY = os.path.join(BASE_DIR, "extra_apps/utils/password_cert/rsa_public.pem")
+LOGIN_PRIVATE_KEY = os.path.join(
+    BASE_DIR, "extra_apps/utils/password_cert/rsa_private.pem")
+LOGIN_PUBLIC_KEY = os.path.join(
+    BASE_DIR, "extra_apps/utils/password_cert/rsa_public.pem")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*',]
+ALLOWED_HOSTS = ['*', ]
 
 
 # Application definition
@@ -48,9 +51,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',
-    'users',
-    'admin',
-    'utils',
+    'users.apps.UsersConfig',
+    'admin.apps.AdminConfig',
+    'utils.apps.UtilsConfig',
     'django_apscheduler',
 ]
 
@@ -65,6 +68,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'aptask.urls'
+
+AUTH_USER_MODEL = 'users.AdminUser'
 
 TEMPLATES = [
     {
@@ -96,20 +101,24 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    }
+}
+
 AUTHENTICATION_BACKENDS = (
     'users.views.CustomBackend',
     'django.contrib.auth.backends.ModelBackend',
     'guardian.backends.ObjectPermissionBackend'
 )
-
-REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators

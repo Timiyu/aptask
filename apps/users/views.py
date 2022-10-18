@@ -5,9 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import auth
 from django.contrib.auth.backends import ModelBackend
 from django.db.models import Q
-from django.contrib.auth.models import User
-from django.conf import settings, global_settings
+from apps.users.models import AdminUser
+from aptask import settings
 import json
+from django.contrib.auth.hashers import make_password
 
 resp_data = dict()
 login_success_code = 'success'
@@ -23,14 +24,14 @@ login_session_remember_expiry = settings.LOGIN_SESSION_EXPIRY_REMEMBER
 
 
 class CustomBackend(ModelBackend):
-    def authenticate(self, request, username=None, password=None, **kwargs):
+    def authenticate(self, request, username:str='', password:str='', **kwargs):
         try:
-            user = User.objects.get(Q(username=username) | Q(email=username))
+            user = AdminUser.objects.get(Q(username=username) | Q(email=username))
             if user.check_password(password) and self.user_can_authenticate(user):
                 return user
+            else:
+                return None
         except Exception as e:
-            return None
-        else:
             return None
 
     def user_can_authenticate(self, user):
@@ -73,7 +74,7 @@ class Register(View):
                 email, email_user[0].username)
         else:
             from extra_apps.utils.createkey import decrypt_password
-            password = auth.hashers.make_password(decrypt_password(password))
+            password = make_password(decrypt_password(password))
             user = User(username=username, email=email,
                         password=password, is_staff=True)
             try:
@@ -110,7 +111,6 @@ class Login(View):
         resp_data = dict()
         if user:
             auth.login(request, user)
-            import datetime
             if remember is True:
                 request.session.set_expiry(
                     login_session_remember_expiry*24*60*60)
