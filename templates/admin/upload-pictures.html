@@ -1,0 +1,425 @@
+{% extends 'PC/admin/base.html' %}
+{% load static %}
+{% block title %}图片上传{% endblock %}
+{% block css %}
+{% endblock %}
+{% block content %}
+    <div class="content">
+        <div class="container-fluid">
+            <!-- Page title box -->
+            <div class="page-title-box">
+                <ol class="breadcrumb float-right">
+                    <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'admin:list_pictures' %}">图片列表</a></li>
+                    <li class="breadcrumb-item active">图片上传</li>
+                </ol>
+                <h4 class="page-title">图片上传</h4>
+            </div>
+            <!-- End page title box -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card-box" style="min-height: 1080px">
+                        {% verbatim myblock %}
+                            <div id="imageuploader" v-cloak>
+                                <el-row>
+                                    <el-col :offset="1">
+                                        <el-button type="primary" @click="selectDialogVisible = true">添加图片<i
+                                                class="el-icon-upload el-icon--right"></i>
+                                        </el-button>
+                                    </el-col>
+                                </el-row>
+                                <el-divider></el-divider>
+                                <el-row>
+                                    <el-col :offset="1">
+                                        <el-table
+                                                v-bind="uploader._uploadList"
+                                                :data="uploader._uploadList"
+                                                style="width: 90%"
+                                                max-height="900px">
+                                            <el-table-column label="名称" min-width="400" show-overflow-tooltip fixed="left">
+                                                <template slot-scope="scope">
+                                                    <el-popover
+                                                            placement="right"
+                                                            title=""
+                                                            trigger="hover">
+                                                        <el-tag slot="reference" type="info"
+                                                                effect="dark">{{ scope.row.file.name }}</el-tag>
+                                                        <div style="margin:0 auto;text-align:center;width:400px;">
+                                                            <el-image fit="fill" :src="scope.row.file.url"></el-image>
+                                                        </div>
+                                                    </el-popover>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                    label="格式"
+                                                    min-width="160">
+                                                <template slot-scope="scope">
+                                                    <el-tag type="success"
+                                                            size="medium">{{ scope.row.file.type }}</el-tag>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                    label="大小"
+                                                    min-width="160">
+                                                <template slot-scope="scope">
+                                                    <el-tag size="medium"
+                                                            type="info">{{ scope.row.file.readsize }}</el-tag>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                    label="上传状态"
+                                                    min-width="700">
+                                                <template slot-scope="scope">
+                                                    <el-row>
+                                                        <el-col :span="15">
+                                                            <el-progress :text-inside="true" :stroke-width="24"
+                                                                         :percentage="scope.row.file.authProgress"
+                                                                         status="success"></el-progress>
+                                                        </el-col>
+                                                        <el-col :span="8" :offset="1">
+                                                            <el-tag size="medium">{{ scope.row.file.statusText }}</el-tag>
+                                                        </el-col>
+                                                    </el-row>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column></el-table-column>
+                                            <el-table-column label="操作" fixed="right" min-width="120">
+                                                <template slot-scope="scope">
+                                                    <el-button v-if="scope.row.file.status==='failed'"
+                                                               size="mini"
+                                                               @click="resumeSingleUpload(scope.$index)">继续
+                                                    </el-button>
+                                                </template>
+                                            </el-table-column>
+                                        </el-table>
+                                    </el-col>
+                                </el-row>
+                                <el-divider></el-divider>
+                                <el-row>
+                                    <el-tag type="danger">上传期间，请勿关闭上传页面，等待全部文件上传完毕！</el-tag>
+                                </el-row>
+                                <el-dialog title="添加图片" :visible.sync="selectDialogVisible" center width="80%"
+                                           @closed="clearData()">
+                                    <el-row>
+                                        <el-button type="primary" icon="el-icon-plus" @click="$refs.inputFiles.click()">
+                                            选择图片
+                                        </el-button>
+                                        <span class="demonstration">支持格式:PNG、JPG、JPEG、GIF,大小不能超过20MB<i
+                                                class="el-icon-check"></i></span>
+                                        <input type="file" ref="inputFiles" style="display:none"
+                                               accept="image/jpg,image/png,image/jpeg,image/gif"
+                                               @change="addSelectData()" multiple/>
+                                    </el-row>
+                                    <el-table :data="tableData" max-height="800px">
+                                        <el-table-column property="name" label="名称" min-width="480" show-overflow-tooltip>
+                                            <template slot-scope="scope">
+                                                <el-popover
+                                                        placement="right"
+                                                        title=""
+                                                        trigger="hover">
+                                                    <el-tag slot="reference" type="info"
+                                                            effect="dark">{{ scope.row.name }}</el-tag>
+                                                    <div style="margin:0 auto;text-align:center;width:400px;">
+                                                        <el-image fit="contain" :src="scope.row.url"></el-image>
+                                                    </div>
+                                                </el-popover>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column property="type" label="格式" min-width="160"></el-table-column>
+                                        <el-table-column property="readsize" label="大小" min-width="160"></el-table-column>
+                                        <el-table-column property="url" label="地址" min-width="600"></el-table-column>
+                                        <el-table-column></el-table-column>
+                                        <el-table-column label="操作" fixed="right" min-width="120">
+                                            <template slot-scope="scope">
+                                                <el-button
+                                                        size="mini"
+                                                        type="danger"
+                                                        @click="selectFileDelete(scope.$index)">删除
+                                                </el-button>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+                                    <div slot="footer" class="dialog-footer">
+                                        <el-button type="danger" icon="el-icon-remove"
+                                                   @click="selectDialogVisible = false">取 消
+                                        </el-button>
+                                        <el-button type="primary" icon="el-icon-s-promotion"
+                                                   @click="addToUploader()">开始上传
+                                        </el-button>
+                                    </div>
+                                </el-dialog>
+                            </div>
+                        {% endverbatim myblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block javascript %}
+    <script src="{% static 'admin/libs/aliyunvodtools/aliyun-upload-sdk/lib/aliyun-oss-sdk-5.3.1.min.js' %}"></script>
+    <script src="{% static 'admin/libs/aliyunvodtools/aliyun-upload-sdk/lib/es6-promise.min.js' %}"></script>
+    <script src="{% static 'admin/libs/aliyunvodtools/aliyun-upload-sdk/aliyun-upload-sdk-1.5.0.min.js' %}"></script>
+    <script>
+        var imageuploader = new Vue({
+                el: '#imageuploader',
+                data: {
+                    timeout: '',
+                    partSize: '',
+                    parallel: '',
+                    retryCount: '',
+                    retryDuration: '',
+                    region: 'cn-shanghai',
+                    userId: '239890350804650636',
+                    uploader: [],
+                    selectDialogVisible: false,
+                    fileList: [],
+                    tableData: [],
+                    selectData: {},
+                    //timer: null,
+                },
+                mounted: function () {
+                    this.uploader = this.createUploader();
+                },
+
+                beforeDestroy() {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                },
+
+                watch: {
+                    fileList() {
+                        this.timer = null;
+                        this.create_timer();
+                    }
+                },
+
+                methods: {
+                    create_timer() {
+                        this.timer = setTimeout(imageuploader.autoListFiles, 1000);
+                    },
+                    coversize: function (limit) {
+                        var size = "";
+                        if (limit < 1 * 1024) {
+                            //如果小于1KB转化成B
+                            size = limit.toFixed(2) + "B";
+                        } else if (limit < 1 * 1024 * 1024) {
+                            //如果小于1MB转化成KB
+                            size = (limit / 1024).toFixed(2) + "KB";
+                        } else if (limit < 1 * 1024 * 1024 * 1024) {
+                            //如果小于1GB转化成MB
+                            size = (limit / (1024 * 1024)).toFixed(2) + "MB";
+                        } else {
+                            //其他转化成GB
+                            size = (limit / (1024 * 1024 * 1024)).toFixed(2) + "GB";
+                        }
+                        var sizestr = size + "";
+                        var len = sizestr.indexOf("\.");
+                        var dec = sizestr.substr(len + 1, 2);
+                        if (dec == "00") {
+                            //当小数点后为00时 去掉小数部分
+                            return sizestr.substring(0, len) + sizestr.substr(len + 3, 2);
+                        }
+                        return sizestr;
+                    }
+                    ,
+                    selectFileDelete: function (itemindex) {
+                        imageuploader.tableData.splice(itemindex, 1)
+                    },
+                    addSelectData: function () {
+                        imageuploader.selectData = this.$refs.inputFiles.files;
+                        for (let i = 0; i < imageuploader.selectData.length; i++) {
+                            // console.log(imageuploader.selectData[i]);
+                            if(imageuploader.selectData[i].size>1024 *1024 * 20){
+                                imageuploader.$message.warning("图片"+  imageuploader.selectData[i].name +  "大小不能超过20MB");
+                                continue;
+                            }
+                            imageuploader.selectData[i].url = URL.createObjectURL(imageuploader.selectData[i]);
+                            imageuploader.selectData[i].readsize = imageuploader.coversize(imageuploader.selectData[i].size);
+                            imageuploader.tableData.push(imageuploader.selectData[i])
+                        }
+                        // console.log(imageuploader.tableData);
+                        this.$refs.inputFiles.value = ""; //解决不能选择相同文件
+                    }
+                    ,
+                    clearData: function () {
+                        this.$refs.inputFiles.value = ""; //解决不能选择相同文件
+                        imageuploader.selectData = {};
+                        imageuploader.tableData = [];
+                    }
+                    ,
+
+                    addToUploader: function () {
+                        for (let i = 0; i < imageuploader.tableData.length; i++) {
+                            imageuploader.tableData[i].Title = imageuploader.tableData[i].name;
+                            imageuploader.uploader.addFile(imageuploader.tableData[i]);
+                        }
+                        imageuploader.autoListFiles();
+                        // console.log(imageuploader.fileList);
+                        this.timer=null;
+                        this.create_timer();
+                        imageuploader.selectDialogVisible = false;
+                    }
+                    ,
+                    autoListFiles: function () {
+                        imageuploader.fileList = imageuploader.uploader.listFiles();
+                        for (let i = 0; i < imageuploader.fileList.length; i++) {
+                            imageuploader.$set(imageuploader.fileList, i, imageuploader.fileList[i]);
+                        }
+                        // console.log(imageuploader.fileList);
+                        if (imageuploader.uploader) {
+                            imageuploader.uploader.startUpload();
+                        } else {
+                            imageuploader.uploader.stopUpload();
+                        }
+                        // console.log(imageuploader.fileList);
+                    },
+
+                    resumeSingleUpload: function (index) {
+                        imageuploader.uploader.resumeFile(index);
+                    },
+
+
+                    createUploader(type) {
+                        let self = this;
+                        let uploader = new AliyunUpload.Vod({
+                            timeout: self.timeout || 60000,
+                            partSize: self.partSize || 1048576,
+                            parallel: self.parallel || 5,
+                            retryCount: self.retryCount || 3,
+                            retryDuration: self.retryDuration || 2,
+                            region: self.region,
+                            userId: self.userId,
+                            // 添加文件成功
+                            addFileSuccess: function (uploadInfo) {
+                                imageuploader.$forceUpdate();
+                                uploadInfo.file.autoProgress = 0;
+                                uploadInfo.file.statusText = '文件添加成功, 等待上传...';
+                                uploadInfo.file.status = 'waiting';
+                                // console.log("addFileSuccess: " + uploadInfo.file.name)
+                            },
+                            // 开始上传
+                            onUploadstarted: function (uploadInfo) {
+                                imageuploader.$forceUpdate();
+                                // 如果是 UploadAuth 上传方式, 需要调用 uploader.setUploadAuthAndAddress 方法
+                                // 如果是 UploadAuth 上传方式, 需要根据 uploadInfo.videoId是否有值，调用点播的不同接口获取uploadauth和uploadAddress
+                                // 如果 uploadInfo.videoId 有值，调用刷新视频上传凭证接口，否则调用创建视频上传凭证接口
+                                // 注意: 这里是测试 demo 所以直接调用了获取 UploadAuth 的测试接口, 用户在使用时需要判断 uploadInfo.videoId 存在与否从而调用 openApi
+                                // 如果 uploadInfo.videoId 存在, 调用 刷新视频上传凭证接口(https://help.aliyun.com/document_detail/55408.html)
+                                // 如果 uploadInfo.videoId 不存在,调用 获取视频上传地址和凭证接口(https://help.aliyun.com/document_detail/55407.html)
+                                if (!uploadInfo.videoId) {
+                                    let createUrl = '{% url 'admin:create_upload_image' %}';
+                                    axios({
+                                        url: createUrl,
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            "Access-Control-Allow-Origin": "*",
+                                            "X-CSRFToken": "{{ csrf_token }}"
+                                        },
+                                        data: {title: uploadInfo.file.name},
+                                    }).then(function (data) {
+                                        // console.log(data);
+                                        data = data.data;
+                                        let uploadAuth = data.UploadAuth;
+                                        let uploadAddress = data.UploadAddress;
+                                        let videoId = data.ImageId;
+                                        uploader.setUploadAuthAndAddress(uploadInfo, uploadAuth, uploadAddress, videoId);
+                                    });
+                                    uploadInfo.file.statusText = '文件开始上传...';
+                                    uploadInfo.file.status = 'started';
+                                    // console.log("onUploadStarted:" + uploadInfo.file.name + ", endpoint:" + uploadInfo.endpoint + ", bucket:" + uploadInfo.bucket + ", object:" + uploadInfo.object);
+                                } else {
+                                    // 如果videoId有值，根据videoId刷新上传凭证
+                                    // https://help.aliyun.com/document_detail/55408.html?spm=a2c4g.11186623.6.630.BoYYcY
+                                    let createUrl = '{% url 'admin:create_upload_image' %}';
+                                    axios({
+                                        url: createUrl,
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            "Access-Control-Allow-Origin": "*",
+                                            "X-CSRFToken": "{{ csrf_token }}"
+                                        },
+                                        data: {title: uploadInfo.file.name},
+                                    }).then(function (data) {
+                                        data = data.data;
+                                        let uploadAuth = data.UploadAuth;
+                                        let uploadAddress = data.UploadAddress;
+                                        let videoId = data.ImageId;
+                                        uploader.setUploadAuthAndAddress(uploadInfo, uploadAuth, uploadAddress, videoId);
+                                    });
+                                }
+                            },
+                            // 文件上传成功
+                            onUploadSucceed: function (uploadInfo) {
+                                imageuploader.$forceUpdate();
+                                // console.log("onUploadSucceed: " + uploadInfo.file.name + ", endpoint:" + uploadInfo.endpoint + ", bucket:" + uploadInfo.bucket + ", object:" + uploadInfo.object);
+                                uploadInfo.file.status = 'finished';
+                                uploadInfo.file.statusText = '文件上传成功!';
+                            },
+                            // 文件上传失败
+                            onUploadFailed: function (uploadInfo, code, message) {
+                                imageuploader.$forceUpdate();
+                                // console.log("onUploadFailed: file:" + uploadInfo.file.name + ",code:" + code + ", message:" + message);
+                                uploadInfo.file.status = 'failed';
+                                uploadInfo.file.statusText = '文件上传失败!';
+                            },
+                            // 取消文件上传
+                            onUploadCanceled: function (uploadInfo, code, message) {
+                                imageuploader.$forceUpdate();
+                                // console.log("Canceled file: " + uploadInfo.file.name + ", code: " + code + ", message:" + message);
+                                uploadInfo.file.status = 'stopped';
+                                uploadInfo.file.statusText = '文件已暂停上传';
+                            },
+                            // 文件上传进度，单位：字节, 可以在这个函数中拿到上传进度并显示在页面上
+                            onUploadProgress: function (uploadInfo, totalSize, progress) {
+                                imageuploader.$forceUpdate();
+                                // console.log("onUploadProgress:file:" + uploadInfo.file.name + ", fileSize:" + totalSize + ", percent:" + Math.ceil(progress * 100) + "%");
+                                let progressPercent = Math.ceil(progress * 100);
+                                uploadInfo.file.authProgress = progressPercent;
+                                uploadInfo.file.status = 'uploading';
+                                uploadInfo.file.statusText = '文件上传中...';
+                            },
+                            // 上传凭证超时
+                            onUploadTokenExpired: function (uploadInfo) {
+                                imageuploader.$forceUpdate();
+                                // 上传大文件超时, 如果是上传方式一即根据 UploadAuth 上传时
+                                // 需要根据 uploadInfo.videoId 调用刷新视频上传凭证接口(https://help.aliyun.com/document_detail/55408.html)重新获取 UploadAuth
+                                // 然后调用 resumeUploadWithAuth 方法, 这里是测试接口, 所以我直接获取了 UploadAuth
+                                let createUrl = '{% url 'admin:create_upload_image' %}';
+                                axios({
+                                    url: createUrl,
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "Access-Control-Allow-Origin": "*",
+                                        "X-CSRFToken": "{{ csrf_token }}"
+                                    },
+                                    data: {title: imageuploader.file.name},
+                                }).then(function (data) {
+                                    data = data.data;
+                                    let uploadAuth = data.UploadAuth;
+                                    uploader.resumeUploadWithAuth(uploadAuth);
+                                    // console.log('upload expired and resume upload with uploadauth ' + uploadAuth);
+                                });
+                                uploadInfo.file.status = 'timeout';
+                                uploadInfo.file.statusText = '文件超时...';
+                            },
+                            // 全部文件上传结束
+                            onUploadEnd: function (uploadInfo) {
+                                // console.log("onUploadEnd: uploaded all the files");
+                                imageuploader.$message.success("全部文件上传完成！");
+                                //clearInterval(this.timer);
+                                //this.timer = null;
+                            }
+                        });
+                        return uploader
+                    }
+
+                }
+            })
+        ;
+    </script>
+{% endblock %}

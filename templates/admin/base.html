@@ -1,0 +1,123 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock %}|新蝶在线管理后台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta content="" name="description"/>
+    <meta content="singdl" name="author"/>
+    <meta content="" name="keywords"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}"/>
+
+    <!-- javectormap -->
+    <link href="{% static 'admin/libs/jqvmap/jqvmap.min.css' %}" rel="stylesheet" type="text/css"/>
+
+
+    <!--calendar css-->
+    <link href="{% static 'admin/libs/fullcalendar/fullcalendar.min.css' %}" rel="stylesheet" type="text/css"/>
+
+    <!-- Icons css -->
+    <link href="{% static 'admin/libs/@mdi/font/css/materialdesignicons.min.css' %}" rel="stylesheet"
+          type="text/css"/>
+    <link href="{% static 'admin/libs/dripicons/webfont/webfont.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'admin/libs/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'admin/libs/simple-line-icons/css/simple-line-icons.css' %}" rel="stylesheet"
+          type="text/css"/>
+    <link href="{% static 'admin/libs/metismenu/dist/metisMenu.css' %}" rel="stylesheet" type="text/css"/>
+
+    <!-- element--ui -->
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="{% static 'admin/libs/element-ui/lib/theme-chalk/index.css' %}" rel="stylesheet"
+          type="text/css">
+
+    <!-- App css -->
+    <link href="{% static 'admin/libs/jquery-toast-plugin/jquery.toast.min.css' %}" rel="stylesheet" type="text/css"/>
+    <!-- build:css -->
+    <link href="{% static 'admin/css/app.css' %}" rel="stylesheet" type="text/css"/>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+    {% block css %}{% endblock %}
+    <!-- endbuild -->
+</head>
+<body style="min-width: 1024px;">
+<div id="wrapper">
+    {% block header %}
+        {% include "PC/admin/header.html" %}
+    {% endblock %}
+    <div class="content-page">
+        {% block content %}{% endblock %}
+    </div>
+    {% block footer %}
+        {% include "PC/admin/footer.html" %}
+    {% endblock %}
+</div>
+
+
+<!-- 引入vue框架 -->
+{#<script src="{% static 'admin/libs/vue/dist/vue.min.js' %}"></script>#}
+<script src="{% static 'admin/libs/vue/dist/vue.js' %}"></script>
+<script src="{% static 'admin/libs/axios/dist/axios.js' %}"></script>
+
+<!-- 引入element组件库 -->
+<script src="{% static 'admin/libs/element-ui/lib/index.js' %}"></script>
+
+<!-- jQuery  -->
+<script src="{% static 'admin/libs/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'admin/libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'admin/libs/jquery-slimscroll/jquery.slimscroll.min.js' %}"></script>
+<script src="{% static 'admin/libs/metismenu/dist/metisMenu.js' %}"></script>
+
+<!-- KNOB JS -->
+<script src="{% static 'admin/libs/jquery-knob/jquery.knob.min.js' %}"></script>
+
+<script src="{% static 'admin/libs/chart.js/Chart.bundle.min.js' %}"></script>
+
+
+<script src="{% static 'admin/libs/jqvmap/jquery.vmap.min.js' %}"></script>
+<script src="{% static 'admin/libs/jqvmap/maps/jquery.vmap.usa.js' %}"></script>
+
+
+<!-- Dashboard Init JS -->
+<script src="{% static 'admin/libs/tinymce/tinymce.min.js' %}"></script>
+<script src="{% static 'admin/libs/jquery-toast-plugin/jquery.toast.min.js' %}"></script>
+<script src="{% static 'admin/js/jquery.toastr.js' %}"></script>
+
+<!-- App js -->
+<script src="{% static 'admin/js/jquery.core.js' %}"></script>
+<script src="{% static 'admin/js/jquery.app.js' %}"></script>
+
+
+<!--  IE需要es6-promise -->
+<script src="{% static 'admin/libs/aliyunvodtools/aliyun-upload-sdk/lib/es6-promise.min.js' %}"></script>
+<script src="{% static 'admin/libs/aliyunvodtools/aliyun-upload-sdk/lib/aliyun-oss-sdk-5.3.1.min.js' %}"></script>
+<script src="{% static 'admin/libs/aliyunvodtools/aliyun-upload-sdk/aliyun-upload-sdk-1.5.0.min.js' %}"></script>
+<script>
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+</script>
+{% block javascript %}{% endblock %}
+</body>
+</html>

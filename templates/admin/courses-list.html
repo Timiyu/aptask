@@ -1,0 +1,1799 @@
+{% extends 'PC/admin/base.html' %}
+{% load static %}
+{% block title %}课程列表{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="https://g.alicdn.com/de/prismplayer/2.8.1/skins/default/aliplayer-min.css"/>
+{% endblock %}
+{% block content %}
+    <div class="content" style="min-width: 1200px;">
+        <div class="container-fluid">
+
+            <!-- Page title box -->
+            <div class="page-title-box">
+                <ol class="breadcrumb float-right">
+                    <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="javascript:void(0);">课程管理</a></li>
+                    <li class="breadcrumb-item active">课程列表</li>
+                </ol>
+                <h4 class="page-title">课程列表</h4>
+            </div>
+            <!-- End page title box -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card-box">
+                        <!-- 此区域禁用jinjia模板语言-->
+                        {% verbatim myblock %}
+                            <div id="courses" v-cloak>
+                                <div id="course_list" v-show="courselistshow">
+                                    <el-row>
+                                        <el-form :inline="true" :model="filter" size="small">
+                                            <el-form-item label="课程名称">
+                                                <el-input v-model="filter.CourseName" placeholder="输入课程名称关键字"
+                                                          :width="50"></el-input>
+                                            </el-form-item>
+                                            <el-form-item label="分类名称">
+                                                <el-input v-model="filter.CategoryName" placeholder="输入分类名称关键字"
+                                                          :width="50"></el-input>
+                                            </el-form-item>
+                                            <el-form-item label="课程标签">
+                                                <el-input v-model="filter.CourseTags" placeholder="输入课程标签关键字"
+                                                          :width="50"></el-input>
+                                            </el-form-item>
+                                            <el-button type="primary" round size="small" @click="filterCourse">搜索
+                                            </el-button>
+                                            <el-button type="info" round size="small"
+                                                       @click="resetFilter()">
+                                                重置
+                                            </el-button>
+                                        </el-form>
+                                    </el-row>
+                                    <el-table v-loading="loading"
+                                              element-loading-text="加载中"
+                                              element-loading-spinner="el-icon-loading"
+                                              @sort-change="sortChange"
+                                              ref="multipleTable"
+                                              :data="course_list"
+                                              tooltip-effect="dark"
+                                              style="width: 100%;"
+                                              :cell-style="cell_style"
+                                              @selection-change="handleSelectionChange">
+                                        <el-table-column
+                                                type="selection"
+                                                min-width="55">
+                                        </el-table-column>
+                                        <el-table-column
+                                                fixed="left"
+                                                prop="id"
+                                                label="ID编号"
+                                                min-width="120"
+                                                sortable
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                fixed="left"
+                                                prop="CourseName"
+                                                label="课程名称"
+                                                min-width="220">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="CategoryName"
+                                                label="课程分类"
+                                                min-width="150"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="CourseDescribe"
+                                                label="简要描述"
+                                                width="250"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="CourseFeeType"
+                                                label="付费模式"
+                                                min-width="120"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                sortable
+                                                prop="CoursePrice"
+                                                label="课程价格"
+                                                min-width="120"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                sortable
+                                                prop="CourseStudent"
+                                                label="学习数"
+                                                min-width="100"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                sortable
+                                                prop="CourseFavNum"
+                                                label="收藏数"
+                                                min-width="100"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                sortable
+                                                prop="CourseClickNum"
+                                                label="点击数"
+                                                min-width="100"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="CourseDegree"
+                                                label="课程难度"
+                                                min-width="120"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="课程标签"
+                                                min-width="450">
+                                            <template slot-scope="scope">
+                                                <div class="tag-group">
+                                                    <el-tag
+                                                            type="danger"
+                                                            style="margin: 5px;"
+                                                            size="small"
+                                                            v-for="item in scope.row.CourseTags"
+                                                            :key="item">
+                                                        {{ item }}
+                                                    </el-tag>
+                                                </div>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="Slug"
+                                                label="标识"
+                                                min-width="250"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="IsBannerCourse"
+                                                label="是否首页轮播"
+                                                min-width="200"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="AddDate_Time"
+                                                label="添加时间"
+                                                sortable
+                                                min-width="240"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="UpDate_Time"
+                                                label="更新时间"
+                                                sortable
+                                                min-width="240"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column width="1"></el-table-column>
+                                        <el-table-column
+                                                fixed="right"
+                                                label="操作"
+                                                min-width="200">
+                                            <template slot-scope="scope">
+                                                <el-button type="primary" icon="el-icon-edit" circle
+                                                           size="mini"
+                                                           @click="openEditForm(scope.row)"></el-button>
+                                                <el-button @click="deleteCoursePre(scope.row)" type="danger"
+                                                           icon="el-icon-delete" circle
+                                                           size="mini">
+                                                </el-button>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+
+                                    <el-row>
+                                        <el-col :span="6">
+                                            <div class="grid-content bg-purple">
+                                                <div style="margin-top: 10px;">
+                                                    <el-button type="primary" @click="openAddForm()" round
+                                                               size="small">新增课程
+                                                    </el-button>
+                                                    <el-button type="danger" @click="deleteAllSelectedPre()"
+                                                               round
+                                                               size="small">删除选中
+                                                    </el-button>
+                                                    <el-button type="info" @click="toggleSelection()" round
+                                                               size="small">
+                                                        取消选中
+                                                    </el-button>
+                                                </div>
+                                            </div>
+                                        </el-col>
+                                        <el-col :span="10" :offset="2">
+                                            <div class="grid-content bg-purple-light">
+                                                <el-pagination
+                                                        @size-change="handleSizeChange"
+                                                        @current-change="handleCurrentChange"
+                                                        :current-page="currentpage"
+                                                        :page-sizes="[15, 25, 50, 100]"
+                                                        :page-size="pagesize"
+                                                        layout="total, sizes, prev, pager, next, jumper"
+                                                        :total="total"
+                                                        background
+                                                        style="margin-top: 10px;">
+                                                </el-pagination>
+                                            </div>
+                                        </el-col>
+                                    </el-row>
+
+
+                                    <el-dialog
+                                            title="提示"
+                                            v-model="deleteCourse"
+                                            :visible.sync="deleteQueryVisible"
+                                            width="30%"
+                                            center>
+                                        <span>确定删除这个课程吗？</span>
+                                        <span slot="footer" class="dialog-footer">
+                                        <el-button @click="deleteQueryVisible = false" type="info" round size="small">取 消</el-button>
+                                        <el-button type="primary"
+                                                   @click="deleteOneCourse(deleteCourse)" round
+                                                   size="small">确 定</el-button>
+                                    </span>
+                                    </el-dialog>
+
+                                    <el-dialog
+                                            title="提示"
+                                            v-model="deleteAllSelected"
+                                            :visible.sync="deleteAllQueryVisible"
+                                            width="30%"
+                                            center>
+                                        <span>确定删除选中课程吗？</span>
+                                        <span slot="footer" class="dialog-footer">
+                                        <el-button @click="deleteAllQueryVisible = false" type="info" round
+                                                   size="small">取 消</el-button>
+                                        <el-button type="primary"
+                                                   @click="deleteAllSelected()" round
+                                                   size="small">确定删除</el-button>
+                                    </span>
+                                    </el-dialog>
+                                </div>
+                                <div id="addCourseForm" v-show="addformshow">
+                                    <el-page-header :title="headertitle" @back="goBackCourseList('addformshow')"
+                                                    content="增加课程">
+                                    </el-page-header>
+                                    <el-row>
+                                        <el-col :span="10">
+                                            <el-form :model="addCourseForm" ref="addCourseForm"
+                                                     label-width="100px" style="margin-top: 40px">
+                                                <el-form-item label="课程名称" prop="CourseName"
+                                                              :rules="[{ required: true, message: '请输入课程名称', trigger:'blur' }, { min: 5, max: 100, message: '长度在 5 到 100 个字符', trigger: 'change' }]">
+                                                    <el-input v-model="addCourseForm.CourseName"
+                                                              placeholder="输入课程名称"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="课程分类"
+                                                              :rules="[{ required: true, message: '选择课程分类'}]">
+                                                    <el-cascader v-model="addCourseForm.Category"
+                                                                 :props="{ checkStrictly: true }"
+                                                                 :options="CourseCate"
+                                                                 placeholder="选择课程分类"
+                                                                 style="width: 100%;" clearable filterable
+                                                                 @focus="loadCourseCate()"></el-cascader>
+                                                </el-form-item>
+                                                <el-form-item label="课程等级" prop="CourseDegree"
+                                                              :rules="[{ required: true, message: '选择课程等级'}]">
+                                                    <el-radio-group v-model="addCourseForm.CourseDegree">
+                                                        <el-radio-button label="cj">初级</el-radio-button>
+                                                        <el-radio-button label="zj">中级</el-radio-button>
+                                                        <el-radio-button label="gj">高级</el-radio-button>
+                                                        <el-radio-button label="jj">进阶</el-radio-button>
+                                                    </el-radio-group>
+                                                </el-form-item>
+                                                <el-form-item label="课程描述" prop="CourseDescribe"
+                                                              :rules="[{ required: true, message: '请输入课程描述', trigger:'blur' },{ min: 5, max: 400, message: '长度在 5 到 400 个字符', trigger: 'change' }]">
+                                                    <el-input v-model="addCourseForm.CourseDescribe"
+                                                              placeholder="输入课程描述" type="textarea"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="课程详情" prop="CourseDetail"
+                                                              :rules="[{ required: false, message: '请输入课程详情', trigger:'blur' },{ min: 5, max: 1000, message: '长度在 5 到 1000 个字符', trigger: 'change' }]">
+                                                    <el-input v-model="addCourseForm.CourseDetail"
+                                                              placeholder="输入课程详情" type="textarea"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="适合人群" prop="CourseTarget"
+                                                              :rules="[{ required: false, message: '请输入适合人群', trigger:'blur' },{ min: 5, max: 400, message: '长度在 5 到 400 个字符', trigger: 'change' }]">
+                                                    <el-input v-model="addCourseForm.CourseTarget"
+                                                              placeholder="输入课程详情" type="textarea"></el-input>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程须知" prop="CourseNeedKnow"
+                                                              :rules="[{ required: false, message: '请输入课程须知', trigger:'blur' },{ min: 5, max: 400, message: '长度在 5 到 400 个字符', trigger: 'change' }]">
+                                                    <el-input v-model="addCourseForm.CourseNeedKnow"
+                                                              placeholder="输入课程须知" type="textarea"></el-input>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程标签">
+                                                    <template>
+                                                        <el-select
+                                                                v-model="addCourseForm.CourseTags"
+                                                                value-key="id"
+                                                                multiple
+                                                                filterable
+                                                                allow-create
+                                                                default-first-option
+                                                                style="width: 100%;"
+                                                                placeholder="请输入课程标签，按回车键">
+                                                            <el-option
+                                                                    v-for="item in addCourseForm.CourseTags"
+                                                                    :key="item.id"
+                                                                    :label="item"
+                                                                    :value="item">
+                                                            </el-option>
+                                                        </el-select>
+                                                    </template>
+                                                </el-form-item>
+
+                                                <el-form-item label="首页轮播" prop="IsBannerCourse">
+                                                    <el-tooltip
+                                                            :content="'Switch value: ' + addCourseForm.IsBannerCourse"
+                                                            placement="top">
+                                                        <el-switch
+                                                                v-model="addCourseForm.IsBannerCourse"
+                                                                active-color="#13ce66"
+                                                                inactive-color="#ff4949"
+                                                                active-value="Y"
+                                                                inactive-value="N">
+                                                        </el-switch>
+                                                    </el-tooltip>
+                                                </el-form-item>
+                                                <el-form-item label="付费模式" prop="CourseFeeType"
+                                                              :rules="[{ required: true, message: '选择付费模式'}]">
+                                                    <el-radio-group v-model="addCourseForm.CourseFeeType">
+                                                        <el-radio label="all_free">所有用户免费</el-radio>
+                                                        <el-radio label="vip_free">会员免费</el-radio>
+                                                        <el-radio label="all_not_free">需单独购买</el-radio>
+                                                    </el-radio-group>
+                                                </el-form-item>
+                                                <el-form-item label="课程价格" prop="CoursePrice"
+                                                              :rules="[{ validator: checkPrice, trigger: 'blur'}]">
+                                                    <el-input v-model="addCourseForm.CoursePrice"
+                                                              placeholder="输入课程价格"></el-input>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程封面横图"
+                                                              :rules="[{ required: false, message: '选择课程封面横图'}]">
+                                                    <el-cascader v-model="pictureSelectCate"
+                                                                 :props="{ checkStrictly: true }"
+                                                                 :options="pictureCate"
+                                                                 placeholder="选择图片类型"
+                                                                 style="width: 30%;" clearable filterable
+                                                                 @focus="loadPictureCate()">
+                                                    </el-cascader>
+                                                    <el-select v-model="addCourseForm.HorizontalImage"
+                                                               filterable
+                                                               placeholder="请选择课程封面横图"
+                                                               style="width: 68%;"
+                                                               :loading="loading_pictures"
+                                                               @focus="loadPictures()">
+                                                        <el-option v-for="item in Pictures"
+                                                                   :key="item.id"
+                                                                   :label="item.ImageTitle"
+                                                                   :value="item.ImageURL">
+                                                            <span style="float:left">
+                                                                <el-image :src="item.ImageURLTumb"
+                                                                          style="width: 20px;height: 20px;"
+                                                                          lazy></el-image></span>
+                                                            <span style="float:right;color:#8492a6;font-size:13px;">{{ item.ImageTitle }}</span>
+                                                        </el-option>
+                                                    </el-select>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程封面竖图"
+                                                              :rules="[{ required: false, message: '选择课程封面竖图'}]">
+                                                    <el-cascader v-model="pictureSelectCate"
+                                                                 :props="{ checkStrictly: true }"
+                                                                 :options="pictureCate"
+                                                                 placeholder="选择图片类型"
+                                                                 style="width: 30%;" clearable filterable
+                                                                 @focus="loadPictureCate()">
+                                                    </el-cascader>
+                                                    <el-select v-model="addCourseForm.VerticalImage"
+                                                               filterable
+                                                               placeholder="请选择课程封面竖图"
+                                                               style="width: 68%;"
+                                                               :loading="loading_pictures"
+                                                               @focus="loadPictures()">
+                                                        <el-option v-for="item in Pictures"
+                                                                   :key="item.id"
+                                                                   :label="item.ImageTitle"
+                                                                   :value="item.ImageURL">
+                                                            <span style="float:left">
+                                                                <el-image :src="item.ImageURLTumb"
+                                                                          style="width: 20px;height: 20px;"
+                                                                          lazy></el-image></span>
+                                                            <span style="float:right;color:#8492a6;font-size:13px;">{{ item.ImageTitle }}</span>
+                                                        </el-option>
+                                                    </el-select>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程封面宽图"
+                                                              :rules="[{ required: false, message: '选择课程封面宽图'}]">
+                                                    <el-cascader v-model="pictureSelectCate"
+                                                                 :props="{ checkStrictly: true }"
+                                                                 :options="pictureCate"
+                                                                 placeholder="选择图片类型"
+                                                                 style="width: 30%;" clearable filterable
+                                                                 @focus="loadPictureCate()">
+                                                    </el-cascader>
+                                                    <el-select v-model="addCourseForm.WideBannerImage"
+                                                               filterable
+                                                               placeholder="请选择课程封面宽图"
+                                                               style="width: 68%;"
+                                                               :loading="loading_pictures"
+                                                               @focus="loadPictures()">
+                                                        <el-option v-for="item in Pictures"
+                                                                   :key="item.id"
+                                                                   :label="item.ImageTitle"
+                                                                   :value="item.ImageURL">
+                                                            <span style="float:left">
+                                                                <el-image :src="item.ImageURLTumb"
+                                                                          style="width: 20px;height: 20px;"
+                                                                          lazy></el-image></span>
+                                                            <span style="float:right;color:#8492a6;font-size:13px;">{{ item.ImageTitle }}</span>
+                                                        </el-option>
+                                                    </el-select>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程封面预览">
+                                                    <el-row style="height: 200px;">
+                                                        <el-col :span="6">
+                                                            <el-popover
+                                                                    placement="right"
+                                                                    title=""
+                                                                    trigger="hover">
+                                                                <el-image slot="reference"
+                                                                          :src="addCourseForm.HorizontalImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          :alt="addCourseForm.HorizontalImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          style="margin-top: 10px;max-width: 100%; max-height:120px;">
+                                                                    <div slot="error" class="image-slot">
+                                                                        <i class="el-icon-picture-outline"></i>
+                                                                    </div>
+                                                                </el-image>
+                                                                <el-image
+                                                                        :src="addCourseForm.HorizontalImage +'?x-oss-process=image/resize,l_400,s_400'"></el-image>
+                                                            </el-popover>
+                                                        </el-col>
+                                                        <el-col :span="6" :offset="1">
+                                                            <el-popover
+                                                                    placement="right"
+                                                                    title=""
+                                                                    trigger="hover">
+                                                                <el-image slot="reference"
+                                                                          :src="addCourseForm.VerticalImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          :alt="addCourseForm.VerticalImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          style="margin-top: 10px;max-width: 100%; max-height:120px;">
+                                                                    <div slot="error" class="image-slot">
+                                                                        <i class="el-icon-picture-outline"></i>
+                                                                    </div>
+                                                                </el-image>
+                                                                <el-image
+                                                                        :src="addCourseForm.VerticalImage +'?x-oss-process=image/resize,l_400,s_400'"></el-image>
+                                                            </el-popover>
+                                                        </el-col>
+                                                        <el-col :span="6" :offset="1">
+                                                            <el-popover
+                                                                    placement="right"
+                                                                    title=""
+                                                                    trigger="hover">
+                                                                <el-image slot="reference"
+                                                                          :src="addCourseForm.WideBannerImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          :alt="addCourseForm.WideBannerImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          style="margin-top: 10px;max-width: 100%; max-height:120px;">
+                                                                    <div slot="error" class="image-slot">
+                                                                        <i class="el-icon-picture-outline"></i>
+                                                                    </div>
+                                                                </el-image>
+                                                                <el-image
+                                                                        :src="addCourseForm.WideBannerImage +'?x-oss-process=image/resize,l_400,s_400'"></el-image>
+                                                            </el-popover>
+                                                        </el-col>
+                                                    </el-row>
+                                                </el-form-item>
+                                                <el-form-item>
+                                                    <el-button type="primary" @click="addNewCourse()">提交
+                                                    </el-button>
+                                                    <el-button @click="resetAddCourseForm()">重置</el-button>
+                                                </el-form-item>
+                                            </el-form>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+
+                                <div id="editCourseForm" v-show="editformshow">
+                                    <el-page-header :title="headertitle" @back="goBackCourseList('editformshow')"
+                                                    content="编辑课程">
+                                    </el-page-header>
+                                    <el-row>
+                                        <el-col :span="10">
+                                            <el-form :model="editCourseForm" ref="editCourseForm"
+                                                     label-width="100px" style="margin-top: 20px">
+                                                <el-form-item label="课程名称" prop="CourseName"
+                                                              :rules="[{ required: true, message: '请输入课程名称', trigger:'blur' }, { min: 5, max: 100, message: '长度在 5 到 100 个字符', trigger: 'change' }]">
+                                                    <el-input v-model="editCourseForm.CourseName"
+                                                              placeholder="输入课程名称"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="课程分类"
+                                                              :rules="[{ required: true, message: '选择课程分类'}]">
+                                                    <el-cascader v-model="editCourseForm.Category"
+                                                                 :props="{ checkStrictly: true }"
+                                                                 :options="CourseCate"
+                                                                 :placeholder="editCourseForm.CategoryLabel"
+                                                                 style="width: 100%;" clearable filterable
+                                                                 @focus="loadCourseCate()"></el-cascader>
+                                                </el-form-item>
+                                                <el-form-item label="课程等级" prop="CourseDegree"
+                                                              :rules="[{ required: true, message: '选择课程等级'}]">
+                                                    <el-radio-group v-model="editCourseForm.CourseDegree">
+                                                        <el-radio-button label="cj">初级</el-radio-button>
+                                                        <el-radio-button label="zj">中级</el-radio-button>
+                                                        <el-radio-button label="gj">高级</el-radio-button>
+                                                        <el-radio-button label="jj">进阶</el-radio-button>
+                                                    </el-radio-group>
+                                                </el-form-item>
+                                                <el-form-item label="课程描述" prop="CourseDescribe"
+                                                              :rules="[{ required: true, message: '请输入课程描述', trigger:'blur' },{ min: 5, max: 400, message: '长度在 5 到 400 个字符', trigger: 'change' }]">
+                                                    <el-input v-model="editCourseForm.CourseDescribe"
+                                                              placeholder="输入课程描述" type="textarea"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="课程详情" prop="CourseDetail"
+                                                              :rules="[{ required: false, message: '请输入课程详情', trigger:'blur' },{ min: 5, max: 1000, message: '长度在 5 到 1000 个字符', trigger: 'change' }]">
+                                                    <el-input v-model="editCourseForm.CourseDetail"
+                                                              placeholder="输入课程详情" type="textarea"></el-input>
+                                                </el-form-item>
+
+                                                <el-form-item label="适合人群" prop="CourseTarget"
+                                                              :rules="[{ required: false, message: '请输入适合人群', trigger:'blur' },{ min: 5, max: 400, message: '长度在 5 到 400 个字符', trigger: 'change' }]">
+                                                    <el-input v-model="editCourseForm.CourseTarget"
+                                                              placeholder="输入适合人群" type="textarea"></el-input>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程须知" prop="CourseNeedKnow"
+                                                              :rules="[{ required: false, message: '请输入课程须知', trigger:'blur' },{ min: 5, max: 400, message: '长度在 5 到 400 个字符', trigger: 'change' }]">
+                                                    <el-input v-model="editCourseForm.CourseNeedKnow"
+                                                              placeholder="输入课程须知" type="textarea"></el-input>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程标签">
+                                                    <template>
+                                                        <el-select
+                                                                v-model="editCourseForm.CourseTags"
+                                                                value-key="id"
+                                                                multiple
+                                                                filterable
+                                                                allow-create
+                                                                default-first-option
+                                                                style="width: 100%;"
+                                                                placeholder="请输入课程标签，按回车键">
+                                                            <el-option
+                                                                    v-for="item in editCourseForm.CourseTags"
+                                                                    :key="item.id"
+                                                                    :label="item"
+                                                                    :value="item">
+                                                            </el-option>
+                                                        </el-select>
+                                                    </template>
+                                                </el-form-item>
+
+                                                <el-form-item label="首页轮播" prop="IsBannerCourse">
+                                                    <el-tooltip
+                                                            :content="'Switch value: ' + editCourseForm.IsBannerCourse"
+                                                            placement="top">
+                                                        <el-switch
+                                                                v-model="editCourseForm.IsBannerCourse"
+                                                                active-color="#13ce66"
+                                                                inactive-color="#ff4949"
+                                                                active-value="Y"
+                                                                inactive-value="N">
+                                                        </el-switch>
+                                                    </el-tooltip>
+                                                </el-form-item>
+                                                <el-form-item label="付费模式" prop="CourseFeeType"
+                                                              :rules="[{ required: true, message: '选择付费模式'}]">
+                                                    <el-radio-group v-model="editCourseForm.CourseFeeType">
+                                                        <el-radio label="all_free">所有用户免费</el-radio>
+                                                        <el-radio label="vip_free">会员免费</el-radio>
+                                                        <el-radio label="all_not_free">需单独购买</el-radio>
+                                                    </el-radio-group>
+                                                </el-form-item>
+                                                <el-form-item label="课程价格" prop="CoursePrice"
+                                                              :rules="[{ validator: checkPrice, trigger: 'blur'}]">
+                                                    <el-input v-model="editCourseForm.CoursePrice"
+                                                              placeholder="输入课程价格"></el-input>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程封面横图"
+                                                              :rules="[{ required: false, message: '选择课程封面横图'}]">
+                                                    <el-cascader v-model="pictureSelectCate"
+                                                                 :props="{ checkStrictly: true }"
+                                                                 :options="pictureCate"
+                                                                 placeholder="选择图片类型"
+                                                                 style="width: 30%;" clearable filterable
+                                                                 @focus="loadPictureCate()">
+                                                    </el-cascader>
+                                                    <el-select v-model="editCourseForm.HorizontalImage"
+                                                               filterable
+                                                               placeholder="请选择课程封面横图"
+                                                               style="width: 68%;"
+                                                               :loading="loading_pictures"
+                                                               @focus="loadPictures()">
+                                                        <el-option v-for="item in Pictures"
+                                                                   :key="item.id"
+                                                                   :label="item.ImageTitle"
+                                                                   :value="item.ImageURL">
+                                                            <span style="float:left">
+                                                                <el-image :src="item.ImageURLTumb"
+                                                                          style="width: 20px;height: 20px;"
+                                                                          lazy></el-image></span>
+                                                            <span style="float:right;color:#8492a6;font-size:13px;">{{ item.ImageTitle }}</span>
+                                                        </el-option>
+                                                    </el-select>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程封面竖图"
+                                                              :rules="[{ required: false, message: '选择课程封面竖图'}]">
+                                                    <el-cascader v-model="pictureSelectCate"
+                                                                 :props="{ checkStrictly: true }"
+                                                                 :options="pictureCate"
+                                                                 placeholder="选择图片类型"
+                                                                 style="width: 30%;" clearable filterable
+                                                                 @focus="loadPictureCate()">
+                                                    </el-cascader>
+                                                    <el-select v-model="editCourseForm.VerticalImage"
+                                                               filterable
+                                                               placeholder="请选择课程封面竖图"
+                                                               style="width: 68%;"
+                                                               :loading="loading_pictures"
+                                                               @focus="loadPictures()">
+                                                        <el-option v-for="item in Pictures"
+                                                                   :key="item.id"
+                                                                   :label="item.ImageTitle"
+                                                                   :value="item.ImageURL">
+                                                            <span style="float:left">
+                                                                <el-image :src="item.ImageURLTumb"
+                                                                          style="width: 20px;height: 20px;"
+                                                                          lazy></el-image></span>
+                                                            <span style="float:right;color:#8492a6;font-size:13px;">{{ item.ImageTitle }}</span>
+                                                        </el-option>
+                                                    </el-select>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程封面宽图"
+                                                              :rules="[{ required: false, message: '选择课程封面宽图'}]">
+                                                    <el-cascader v-model="pictureSelectCate"
+                                                                 :props="{ checkStrictly: true }"
+                                                                 :options="pictureCate"
+                                                                 placeholder="选择图片类型"
+                                                                 style="width: 30%;" clearable filterable
+                                                                 @focus="loadPictureCate()">
+                                                    </el-cascader>
+                                                    <el-select v-model="editCourseForm.WideBannerImage"
+                                                               filterable
+                                                               placeholder="请选择课程封面宽图"
+                                                               style="width: 68%;"
+                                                               :loading="loading_pictures"
+                                                               @focus="loadPictures()">
+                                                        <el-option v-for="item in Pictures"
+                                                                   :key="item.id"
+                                                                   :label="item.ImageTitle"
+                                                                   :value="item.ImageURL">
+                                                            <span style="float:left">
+                                                                <el-image :src="item.ImageURLTumb"
+                                                                          style="width: 20px;height: 20px;"
+                                                                          lazy></el-image></span>
+                                                            <span style="float:right;color:#8492a6;font-size:13px;">{{ item.ImageTitle }}</span>
+                                                        </el-option>
+                                                    </el-select>
+                                                </el-form-item>
+
+                                                <el-form-item label="课程封面预览">
+                                                    <el-row style="height: 200px;">
+                                                        <el-col :span="6">
+                                                            <el-popover
+                                                                    placement="right"
+                                                                    title=""
+                                                                    trigger="hover">
+                                                                <el-image slot="reference"
+                                                                          :src="editCourseForm.HorizontalImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          :alt="editCourseForm.HorizontalImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          style="margin-top: 10px;max-width: 100%; max-height:120px;">
+                                                                    <div slot="error" class="image-slot">
+                                                                        <i class="el-icon-picture-outline"></i>
+                                                                    </div>
+                                                                </el-image>
+                                                                <el-image
+                                                                        :src="editCourseForm.HorizontalImage +'?x-oss-process=image/resize,l_400,s_400'"></el-image>
+                                                            </el-popover>
+                                                        </el-col>
+                                                        <el-col :span="6" :offset="1">
+                                                            <el-popover
+                                                                    placement="right"
+                                                                    title=""
+                                                                    trigger="hover">
+                                                                <el-image slot="reference"
+                                                                          :src="editCourseForm.VerticalImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          :alt="editCourseForm.VerticalImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          style="margin-top: 10px;max-width: 100%; max-height:120px;">
+                                                                    <div slot="error" class="image-slot">
+                                                                        <i class="el-icon-picture-outline"></i>
+                                                                    </div>
+                                                                </el-image>
+                                                                <el-image
+                                                                        :src="editCourseForm.VerticalImage +'?x-oss-process=image/resize,l_400,s_400'"></el-image>
+                                                            </el-popover>
+                                                        </el-col>
+                                                        <el-col :span="6" :offset="1">
+                                                            <el-popover
+                                                                    placement="right"
+                                                                    title=""
+                                                                    trigger="hover">
+                                                                <el-image slot="reference"
+                                                                          :src="editCourseForm.WideBannerImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          :alt="editCourseForm.WideBannerImage +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                          style="margin-top: 10px;max-width: 100%; max-height:120px;">
+                                                                    <div slot="error" class="image-slot">
+                                                                        <i class="el-icon-picture-outline"></i>
+                                                                    </div>
+                                                                </el-image>
+                                                                <el-image
+                                                                        :src="editCourseForm.WideBannerImage +'?x-oss-process=image/resize,l_400,s_400'"></el-image>
+                                                            </el-popover>
+                                                        </el-col>
+                                                    </el-row>
+                                                </el-form-item>
+                                                <el-form-item>
+                                                    <el-button type="primary" @click="saveEditCourse()">保存
+                                                    </el-button>
+                                                    <el-button @click="resetEditCourseForm()">重置</el-button>
+                                                </el-form-item>
+                                            </el-form>
+                                        </el-col>
+                                        <el-col :span="13" :offset="1">
+                                            <div style="margin-top: 20px">
+                                                <el-form v-for="(item, index) in capitals_lessons"
+                                                         v-bind:key="item.id" v-bind:item="item"
+                                                         v-bind:index="index"
+                                                         label-width="80px">
+                                                    <el-form-item :label="'第'+(index+1)+'章'">
+                                                        <span>{{ item.capital.CapitalName }}</span>
+                                                        <el-button type="primary" size="small"
+                                                                   icon="el-icon-edit"
+                                                                   @click="GetEditCapital(item.capital.id);editCapitalVisible = true;"></el-button>
+                                                        <el-button size="small" type="danger"
+                                                                   icon="el-icon-delete"
+                                                                   @click="deleteCapitalVisible = true;deleteCapitalId = item.capital.id;"></el-button>
+                                                    </el-form-item>
+                                                    <el-form-item>
+                                                        <el-form>
+                                                            <el-form-item v-for="(item, index) in item.lessons"
+                                                                          v-bind:key="item.id"
+                                                                          v-bind:item="item"
+                                                                          v-bind:index="index"
+                                                                          :label="'第'+(index+1)+'节'">
+                                                            <span>{{ item.LessonName }}
+                                                                <i class="el-icon-time"></i>
+                                                                {{ item.LessonVideo.VideoDuration }}
+                                                            </span>
+                                                                <el-button type="primary" icon="el-icon-edit"
+                                                                           size="mini"
+                                                                           @click="GetEditLesson(item.id);editLessonVisible = true;"></el-button>
+                                                                <el-button size="mini" type="danger"
+                                                                           icon="el-icon-delete"
+                                                                           @click="deleteLessonVisible = true;deleteLessonId = item.id;"></el-button>
+                                                                <br>
+                                                                <span>{{ item.LessonVideo.VideoTitle }}</span>
+                                                                <el-button icon="el-icon-caret-right" type="text"
+                                                                           @click="videoForm = item.LessonVideo;prevideoview();">
+                                                                    播放
+                                                                </el-button>
+                                                            </el-form-item>
+                                                            <el-form-item v-if="capitals_lessons.length > 0">
+                                                                <el-button type="success" icon="el-icon-plus"
+                                                                           size="small"
+                                                                           @click="openAddLessonForm(item.capital)">增加小节
+                                                                </el-button>
+                                                            </el-form-item>
+                                                        </el-form>
+                                                    </el-form-item>
+                                                </el-form>
+                                                <el-button type="success" icon="el-icon-plus" size="small"
+                                                           @click="openAddCapitalForm()"
+                                                           style="margin-left: 40px;margin-bottom: 40px;">
+                                                    增加章节
+                                                </el-button>
+                                            </div>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+                                <el-dialog title="增加课程章节" :visible.sync="addCapitalVisible">
+                                    <el-form :model="addCapitalForm" label-position="right" ref="addCapitalForm"
+                                             :label-width="formLabelWidth">
+                                        <el-form-item label="章节名称" prop="CapitalName"
+                                                      :rules="[{ required: true, message: '章节名称不能为空',trigger:'blur'}]">
+                                            <el-input v-model="addCapitalForm.CapitalName"
+                                                      autocomplete="off" placeholder="请输入章节名称"></el-input>
+                                        </el-form-item>
+                                    </el-form>
+                                    <div slot="footer" class="dialog-footer">
+                                        <el-button @click="addCapitalVisible = false">取 消</el-button>
+                                        <el-button type="primary" @click="addCapital()">提交</el-button>
+                                    </div>
+                                </el-dialog>
+
+                                <el-dialog title="增加课程小节" :visible.sync="addLessonVisible">
+                                    <el-form :model="addLessonForm" label-position="right" ref="addLessonForm"
+                                             :label-width="formLabelWidth">
+                                        <el-form-item label="章节名称" prop="LessonName"
+                                                      :rules="[{ required: true, message: '小节名称不能为空',trigger:'blur'}]">
+                                            <el-input v-model="addLessonForm.LessonName" autocomplete="off"
+                                                      placeholder="请输入小节名称" style="width: 96%"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="章节视频" prop="video.VideoTitle"
+                                                      :rules="[{ required: true, message: '必须选择小节视频', trigger:'blur'}]">
+                                            <el-cascader v-model="videoSelectCate"
+                                                         :props="{ checkStrictly: true }"
+                                                         :options="videoCate"
+                                                         placeholder="选择视频类型"
+                                                         style="width: 30%;" clearable filterable
+                                                         @focus="loadVideoCate()">
+                                            </el-cascader>
+                                            <el-select v-model="addLessonForm.video"
+                                                       value-key="id"
+                                                       filterable
+                                                       placeholder="请选择小节视频"
+                                                       style="width: 65%;"
+                                                       :loading="loading_videos"
+                                                       @focus="loadVideos()">
+                                                <el-option v-for="item in Videos"
+                                                           :key="item.id"
+                                                           :label="item.VideoTitle"
+                                                           :value="item">
+                                                            <span style="float:left">
+                                                                <el-image :src="item.VideoCoverURLTumb"
+                                                                          style="width: 20px;height: 20px;"
+                                                                          lazy></el-image></span>
+                                                    <span style="float:right;color:#8492a6;font-size:13px;">{{ item.VideoTitle }}</span>
+                                                </el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                        <el-form-item label="是否试学">
+                                            <el-tooltip
+                                                    :content="'Switch value: ' + addLessonForm.LessonFreePreview"
+                                                    placement="top">
+                                                <el-switch
+                                                        v-model="addLessonForm.LessonFreePreview"
+                                                        active-color="#13ce66"
+                                                        inactive-color="#ff4949">
+                                                </el-switch>
+                                            </el-tooltip>
+                                        </el-form-item>
+                                    </el-form>
+                                    <div slot="footer" class="dialog-footer">
+                                        <el-button @click="addLessonVisible = false">取 消</el-button>
+                                        <el-button type="primary" @click="addLesson()">提交</el-button>
+                                    </div>
+                                </el-dialog>
+                                <el-dialog title="编辑课程章节" :visible.sync="editCapitalVisible">
+                                    <el-form :model="editCapitalForm" label-position="right" ref="editCapitalForm"
+                                             :label-width="formLabelWidth">
+                                        <el-form-item label="章节名称" prop="CapitalName"
+                                                      :rules="[{ required: true, message: '章节名称不能为空',trigger:'blur'}]">
+                                            <el-input v-model="editCapitalForm.CapitalName"
+                                                      autocomplete="off" placeholder="请输入章节名称"></el-input>
+                                        </el-form-item>
+                                    </el-form>
+                                    <div slot="footer" class="dialog-footer">
+                                        <el-button @click="editCapitalVisible = false">取 消</el-button>
+                                        <el-button type="primary" @click="saveEditCapital()">保存章节</el-button>
+                                    </div>
+                                </el-dialog>
+
+                                <el-dialog title="编辑课程小节" :visible.sync="editLessonVisible">
+                                    <el-form :model="editLessonForm" label-position="right" ref="editLessonForm"
+                                             :label-width="formLabelWidth">
+                                        <el-form-item label="章节名称" prop="LessonName"
+                                                      :rules="[{ required: true, message: '小节名称不能为空',trigger:'blur'}]">
+                                            <el-input v-model="editLessonForm.LessonName" autocomplete="off"
+                                                      placeholder="请输入小节名称" style="width: 96%"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="章节视频" prop="video.VideoTitle"
+                                                      :rules="[{ required: true, message: '必须选择小节视频', trigger:'blur'}]">
+                                            <el-cascader v-model="videoSelectCate"
+                                                         :props="{ checkStrictly: true }"
+                                                         :options="videoCate"
+                                                         placeholder="选择视频类型"
+                                                         style="width: 30%;" clearable filterable
+                                                         @focus="loadVideoCate()">
+                                            </el-cascader>
+                                            <el-select v-model="editLessonForm.video"
+                                                       value-key="id"
+                                                       filterable
+                                                       :placeholder="editLessonForm.video.VideoTitle"
+                                                       style="width: 65%;"
+                                                       :loading="loading_videos"
+                                                       @focus="loadVideos()">
+                                                <el-option v-for="item in Videos"
+                                                           :key="item.id"
+                                                           :label="item.VideoTitle"
+                                                           :value="item">
+                                                            <span style="float:left">
+                                                                <el-image :src="item.VideoCoverURLTumb"
+                                                                          style="width: 20px;height: 20px;"
+                                                                          lazy></el-image></span>
+                                                    <span style="float:right;color:#8492a6;font-size:13px;">{{ item.VideoTitle }}</span>
+                                                </el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                        <el-form-item label="是否试学">
+                                            <el-tooltip
+                                                    :content="'Switch value: ' + editLessonForm.LessonFreePreview"
+                                                    placement="top">
+                                                <el-switch
+                                                        v-model="editLessonForm.LessonFreePreview"
+                                                        active-color="#13ce66"
+                                                        inactive-color="#ff4949">
+                                                </el-switch>
+                                            </el-tooltip>
+                                        </el-form-item>
+                                    </el-form>
+                                    <div slot="footer" class="dialog-footer">
+                                        <el-button @click="editLessonVisible = false">取 消</el-button>
+                                        <el-button type="primary" @click="saveEditLesson()">保存小节</el-button>
+                                    </div>
+                                </el-dialog>
+                                <el-dialog
+                                        title="删除课程章节"
+                                        :visible.sync="deleteCapitalVisible"
+                                        width="30%">
+                                    <span>删除章节会删除章节下的所有小节，是否删除章节？</span>
+                                    <span slot="footer" class="dialog-footer">
+                                        <el-button
+                                                @click="deleteCapitalVisible = false;deleteCapitalId = null;">取 消</el-button>
+                                        <el-button type="danger" @click="deleteCapital()">确 定</el-button>
+                                    </span>
+                                </el-dialog>
+                                <el-dialog
+                                        title="删除课程小节"
+                                        :visible.sync="deleteLessonVisible"
+                                        width="30%">
+                                    <span>是否删除小节？</span>
+                                    <span slot="footer" class="dialog-footer">
+                                        <el-button
+                                                @click="deleteLessonVisible = false;deleteLessonId = null;">取 消</el-button>
+                                        <el-button type="danger" @click="deleteLesson()">确 定</el-button>
+                                    </span>
+                                </el-dialog>
+                                <el-dialog
+                                        :title="videoForm.VideoTitle"
+                                        :visible.sync="playdialogVisible"
+                                        :before-close="handlepalyerClose"
+                                        width="50%">
+                                    <div style="height:480px" ref='player'>
+                                        <div class="prism-player" id="playerbox"></div>
+                                    </div>
+                                </el-dialog>
+                            </div>
+                        {% endverbatim myblock %}
+                    </div>
+                </div>
+            </div> <!-- end row -->
+        </div> <!-- end container-fluid-->
+    </div> <!-- end contant-->
+{% endblock %}
+{% block javascript %}
+    <script type="text/javascript" charset="utf-8"
+            src="https://g.alicdn.com/de/prismplayer/2.8.1/aliplayer-min.js"></script>
+
+    <script>
+        var vm = new Vue({
+            el: '#courses',
+            data: {
+                courselistshow: true,
+                addformshow: false,
+                editformshow: false,
+                detailformshow: false,
+                headertitle: "返回课程列表",
+                course_list: [],
+                multipleSelection: [],
+                pagesize: 15, // 每页数量
+                currentpage: 1,
+                total: 0,
+                filter: {
+                    CourseName: '',
+                    CategoryName: '',
+                    CourseTags: '',
+                },
+                sort: {
+                    column_name: '',
+                    sort_type: null,
+                },
+                Pictures: [],
+                Videos: [],
+                addCourseForm: {
+                    CourseName: '',
+                    Category: '',
+                    CategoryLabel: '',
+                    CourseDescribe: '',
+                    CourseDetail: '',
+                    CourseNeedKnow: '',
+                    CourseDegree: '',
+                    HorizontalImage: '',
+                    VerticalImage: '',
+                    WideBannerImage: '',
+                    IsBannerCourse: 'N',
+                    CourseTags: [],
+                    CourseFeeType: '',
+                    CoursePrice: '',
+                    CourseTarget: '',
+                },
+                deleteAllQueryVisible: false,
+                deleteCourse: {},
+                deleteQueryVisible: false,
+                editCourseForm: {
+                    id: null,
+                    CourseName: '',
+                    Category: '',
+                    CategoryLabel: '',
+                    CourseDescribe: '',
+                    CourseDetail: '',
+                    CourseNeedKnow: '',
+                    CourseDegree: '',
+                    IsBannerCourse: '',
+                    HorizontalImage: '',
+                    VerticalImage: '',
+                    WideBannerImage: '',
+                    CourseTags: [],
+                    CourseFeeType: '',
+                    CoursePrice: '',
+                    CourseTarget: '',
+                },
+                capitals_lessons: [],
+                addCapitalForm: {
+                    course_id: null,
+                    CapitalName: '',
+                },
+                addLessonForm: {
+                    course_id: null,
+                    capital_id: null,
+                    video: {},
+                    LessonFreePreview: false,
+                },
+                editCapitalForm: {
+                    capital_id: null,
+                    CapitalName: '',
+                },
+                editLessonForm: {
+                    lesson_id: null,
+                    LessonName: '',
+                    video: {
+                        id: null,
+                        VideoTitle: '',
+                    },
+                    LessonFreePreview: false,
+                },
+                deleteCapitalId: null,
+                deleteLessonId: null,
+                addCapitalVisible: false,
+                addLessonVisible: false,
+                editCapitalVisible: false,
+                editLessonVisible: false,
+                deleteCapitalVisible: false,
+                deleteLessonVisible: false,
+                CourseCate: [],
+                videoForm: {
+                    id: null,
+                    VideoId: '',
+                    VideoTitle: '',
+                },
+                playdialogVisible: false,
+                formLabelWidth: '120px',
+                labelPosition: 'left',
+                cell_style: {
+                    padding: 5,
+                },
+                pictureSelectCate: '',
+                videoSelectCate: '',
+                pictureCate: [],
+                videoCate: [],
+                loading_pictures: true,
+                loading_videos: true,
+                loading: true,
+            },
+
+            created: function () {
+                this.loadCourses();
+            },
+
+            methods: {
+                toggleSelection(rows) {
+                    if (rows) {
+                        rows.forEach(row => {
+                            this.$refs.multipleTable.toggleRowSelection(row);
+                        });
+                    } else {
+                        this.$refs.multipleTable.clearSelection();
+                    }
+                },
+
+                handleSelectionChange(val) {
+                    this.multipleSelection = val;
+                    console.log(this.multipleSelection);
+                },
+
+                sortChange(column, prop, order) {
+
+                    //点击排序按钮后拿到column.order，可以发送column.order给后台，后台再根据什么排序来返回排序过后的数据
+                    console.log(column + '---' + column.prop + '---' + column.order);
+                    this.sort = {column_name: column.prop, sort_type: column.order};
+                    this.currentpage = 1;
+                    this.loadCourses();
+                    //输出的结果 [object Object]---name---ascending
+
+                },
+
+                loadCourses: function () {
+                    console.log(this.currentpage);
+                    console.log(this.pagesize);
+                    axios({
+                        url: "{% url 'admin:list_courses' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        // withCredentials: true,
+                        data: {
+                            current_page: this.currentpage,
+                            page_size: this.pagesize,
+                            column_name: this.sort.column_name,
+                            sort_type: this.sort.sort_type,
+                            filter: this.filter,
+                        },
+                    })
+                        .then(function (response) {
+                            console.log(vm.course_list);
+                            vm.course_list = response.data.pageData;
+                            if (((vm.course_list) == undefined || (vm.course_list).length <= 0) && vm.currentpage > 1) {
+                                vm.currentpage = vm.currentpage - 1;
+                                vm.loadCourses();
+                            } else {
+                                vm.loading = false;
+                            }
+                            vm.total = response.data.total;
+                            console.log(response.data);
+                        }).catch(function (error) {
+                        console.log(error);
+                    });
+                },
+
+
+                loadVideoCate: function () {
+                    axios({
+                        url: "{% url 'admin:get_video_cate' %}",
+                        method: 'GET',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                    }).then(function (response) {
+                        vm.videoCate = response.data.resp_video_cate;
+                    })
+                },
+
+
+                loadPictureCate: function () {
+                    axios({
+                        url: "{% url 'admin:get_picture_cate' %}",
+                        method: 'GET',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                    }).then(function (response) {
+                        vm.pictureCate = response.data.resp_picture_cate;
+                    })
+                },
+
+                loadCourseCate: function () {
+                    axios({
+                        url: "{% url 'admin:get_all_category' %}",
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        params: {},
+                    }).then(function (response) {
+                        vm.CourseCate = response.data.allcategory;
+                        console.log(response);
+                    }).catch(function (error) {
+                        console.log(error);
+
+                    })
+                },
+
+                GetEditCourse: function (val) {
+                    axios({
+                        url: "{% url 'admin:get_course' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: val,
+                    }).then(function (response) {
+                        vm.editCourseForm = response.data.Course;
+                        vm.capitals_lessons = response.data.Capitals_Lessons;
+                        console.log(response);
+                        console.log(vm.editCourseForm);
+                    }).catch(function (error) {
+                        console.log(error);
+
+                    })
+                },
+
+                GetEditCapital: function (val) {
+                    axios({
+                        url: "{% url 'admin:edit_capital' %}",
+                        method: 'GET',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        params: {capital_id: val},
+                    }).then(function (response) {
+                        vm.editCapitalForm = response.data.Capital;
+                    }).catch(function (error) {
+                        console.log(error);
+                    })
+                },
+
+                GetEditLesson: function (val) {
+                    axios({
+                        url: "{% url 'admin:edit_lesson' %}",
+                        method: 'GET',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        params: {lesson_id: val},
+                    }).then(function (response) {
+                        vm.editLessonForm = response.data.Lesson;
+                        console.log(response);
+                    }).catch(function (error) {
+                        console.log(error);
+                    })
+                },
+
+                saveEditCapital: function () {
+                    this.$refs["editCapitalForm"].validate((valid) => {
+                        if (valid) {
+                            axios({
+                                url: "{% url 'admin:edit_capital' %}",
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Access-Control-Allow-Origin": "*",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                data: vm.editCapitalForm,
+                            }).then(function (response) {
+                                if ('success' == response.data.success) {
+                                    vm.$message.success(response.data.message);
+                                    vm.editCapitalVisible = false;
+                                    vm.editCapitalForm = {
+                                        capital_id: null,
+                                        CapitalName: '',
+                                    };
+                                    vm.GetEditCourse(vm.editCourseForm);
+                                } else {
+                                    vm.$message.error(response.data.message);
+                                }
+                                console.log(vm.editCapitalForm);
+                            }).catch(function (error) {
+                                console.log(error);
+
+                            })
+
+                        } else {
+                            console.log('保存发生错误!!');
+                            return false;
+                        }
+                    });
+                },
+
+                saveEditLesson: function () {
+                    this.$refs["editLessonForm"].validate((valid) => {
+                        if (valid) {
+                            axios({
+                                url: "{% url 'admin:edit_lesson' %}",
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Access-Control-Allow-Origin": "*",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                data: vm.editLessonForm,
+                            }).then(function (response) {
+                                if ('success' == response.data.success) {
+                                    vm.$message.success(response.data.message);
+                                    vm.editLessonVisible = false;
+                                    vm.editLessonForm = {
+                                        lesson_id: null,
+                                        LessonName: '',
+                                        video: {},
+                                        LessonFreePreview: '0',
+                                    };
+                                    vm.GetEditCourse(vm.editCourseForm);
+                                } else {
+                                    vm.$message.error(response.data.message);
+                                }
+                                console.log(vm.editLessonForm);
+                            }).catch(function (error) {
+                                console.log(error);
+
+                            })
+
+                        } else {
+                            console.log('保存发生错误!!');
+                            return false;
+                        }
+                    });
+                },
+
+                saveEditCourse: function () {
+                    this.$refs["editCourseForm"].validate((valid) => {
+                        if (valid) {
+                            axios({
+                                url: "{% url 'admin:edit_course' %}",
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Access-Control-Allow-Origin": "*",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                data: vm.editCourseForm,
+                            }).then(function (response) {
+                                if ('success' == response.data.success) {
+                                    vm.$message.success(response.data.message);
+                                    vm.GetEditCourse(vm.editCourseForm);
+                                } else {
+                                    vm.$message.error(response.data.message);
+                                }
+                                console.log(vm.editCourseForm);
+                            }).catch(function (error) {
+                                console.log(error);
+
+                            })
+
+                        } else {
+                            console.log('保存发生错误!!');
+                            return false;
+                        }
+                    });
+                },
+
+                handleSizeChange(val) {
+                    this.pagesize = val;
+                    this.loadCourses();
+                    console.log(`每页 ${val} 条`);
+                }
+                ,
+
+                handleCurrentChange(val) {
+                    this.currentpage = val;
+                    this.loadCourses();
+                    console.log(`当前页: ${val}`);
+                }
+                ,
+
+                filterCourse: function () {
+                    this.currentpage = 1;
+                    this.loadCourses();
+                }
+                ,
+
+                resetFilter: function () {
+                    this.filter.CourseName = '';
+                    this.filter.CategoryName = '';
+                    this.filter.CourseTags = '';
+                    this.loadCourses();
+                },
+
+                goBackCourseList: function (val) {
+                    if (val == 'addformshow') {
+                        vm.addformshow = false;
+                    } else if (val == 'editformshow') {
+                        vm.editformshow = false;
+                    }
+                    vm.courselistshow = true;
+                    vm.loadCourses();
+                }
+                ,
+
+                checkPrice: function (rule, value, callback) {
+                    if (!value) {
+                        return callback(new Error('课程价格不能为空'));
+                    }
+                    setTimeout(() => {
+                        if (!(value.match(/^(([1-9][0-9]*)|(([0]\.\d{1,2}|[1-9][0-9]*\.\d{1,2})))$/))) {
+                            callback(new Error('请输入课程价格最多保留两位小数'));
+                        } else {
+                            callback();
+                        }
+                    }, 1000);
+                }
+                ,
+
+                openAddForm: function () {
+                    vm.resetAddCourseForm();
+                    vm.courselistshow = false;
+                    vm.addformshow = true;
+                }
+                ,
+
+
+                openEditForm: function (val) {
+                    vm.GetEditCourse(val);
+                    vm.courselistshow = false;
+                    vm.editformshow = true;
+                }
+                ,
+                deleteCapital: function () {
+                    axios(
+                        {
+                            url: "{% url 'admin:delete_capital' %}",
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Access-Control-Allow-Origin": "*",
+                                "X-CSRFToken": "{{ csrf_token }}"
+                            },
+                            data: {capital_id: vm.deleteCapitalId},
+                        }
+                    ).then(function (response) {
+                        if ('success' == response.data.success) {
+                            vm.$message.success(response.data.message);
+                            vm.deleteCapitalVisible = false;
+                            vm.deleteCapitalId = null;
+                            vm.GetEditCourse(vm.editCourseForm);
+                        } else {
+                            vm.$message.error(response.data.message);
+                        }
+                    }).catch(function (error) {
+                        console.log(error);
+                    })
+                },
+
+                deleteLesson: function () {
+                    axios(
+                        {
+                            url: "{% url 'admin:delete_lesson' %}",
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Access-Control-Allow-Origin": "*",
+                                "X-CSRFToken": "{{ csrf_token }}"
+                            },
+                            data: {lesson_id: vm.deleteLessonId},
+                        }
+                    ).then(function (response) {
+                        if ('success' == response.data.success) {
+                            vm.$message.success(response.data.message);
+                            vm.deleteLessonVisible = false;
+                            vm.deleteLessonId = null;
+                            vm.GetEditCourse(vm.editCourseForm);
+                        } else {
+                            vm.$message.error(response.data.message);
+                        }
+                    }).catch(function (error) {
+                        console.log(error);
+                    })
+                },
+
+                addNewCourse: function () {
+                    this.$refs["addCourseForm"].validate((valid) => {
+                        if (valid) {
+                            axios({
+                                url: "{% url 'admin:add_courses' %}",
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Access-Control-Allow-Origin": "*",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                data: vm.addCourseForm,
+                            }).then(function (response) {
+                                if ('success' == response.data.success) {
+                                    vm.$message.success(response.data.message)
+                                    vm.addformshow = false;
+                                    vm.loadCourses();
+                                    vm.courselistshow = true;
+                                    vm.resetAddCourseForm();
+                                    console.log(response.data.data);
+                                } else {
+                                    vm.$message.error(response.data.message);
+                                }
+                            }).catch(function (error) {
+                                console.log(error);
+                            });
+                        } else {
+                            console.log('提交发生错误!!');
+                            return false;
+                        }
+                    });
+                }
+                ,
+
+                openAddCapitalForm: function () {
+                    vm.addCapitalForm.course_id = vm.editCourseForm.id;
+                    vm.addCapitalVisible = true;
+                },
+
+                addCapital: function () {
+                    this.$refs['addCapitalForm'].validate((valid) => {
+                        if (valid) {
+                            axios({
+                                url: "{% url 'admin:add_capital' %}",
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Access-Control-Allow-Origin": "*",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                data: vm.addCapitalForm,
+                            }).then(function (response) {
+                                if ('success' == response.data.success) {
+                                    vm.$message.success(response.data.message);
+                                    vm.addCapitalVisible = false;
+                                    vm.GetEditCourse(vm.editCourseForm);
+                                    vm.addCapitalForm = {
+                                        course_id: null,
+                                        CapitalName: '',
+                                    };
+                                } else {
+                                    vm.$message.error(response.data.message);
+                                }
+                            }).catch(function (error) {
+                                console.log(error);
+                            })
+                        } else {
+                            console.log('提交发生错误！');
+                        }
+                    })
+
+                },
+
+                openAddLessonForm: function (val) {
+                    vm.addLessonForm.course_id = vm.editCourseForm.id;
+                    vm.addLessonForm.capital_id = val.id;
+                    vm.addLessonVisible = true;
+                },
+
+                addLesson: function () {
+                    this.$refs['addLessonForm'].validate((valid) => {
+                        if (valid) {
+                            axios({
+                                url: "{% url 'admin:add_lesson' %}",
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Access-Control-Allow-Origin": "*",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                data: vm.addLessonForm,
+                            }).then(function (response) {
+                                if ('success' == response.data.success) {
+                                    vm.$message.success(response.data.message);
+                                    vm.addLessonVisible = false;
+                                    vm.GetEditCourse(vm.editCourseForm);
+                                    vm.addLessonForm = {
+                                        course_id: null,
+                                        capital_id: null,
+                                        video: {},
+                                        LessonFreePreview: '0',
+                                    };
+                                } else {
+                                    vm.$message.error(response.data.message);
+                                }
+                            }).catch(function (error) {
+                                console.log(error);
+                            })
+                        } else {
+                            console.log('提交发生错误！');
+                        }
+                    })
+
+                },
+
+
+                loadPictures: function () {
+                    vm.loading_pictures = true;
+                    axios({
+                        url: "{% url 'admin:get_pictures_this_type' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {cate: vm.pictureSelectCate},
+                    }).then(function (response) {
+                        vm.Pictures = response.data.Pictures;
+                        vm.loading_pictures = false;
+                    }).catch(function (error) {
+                        console.log(error);
+                    })
+                }
+                ,
+
+                loadVideos: function () {
+                    vm.loading_videos = true;
+                    axios({
+                        url: "{% url 'admin:get_videos' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {cate: vm.videoSelectCate},
+                    }).then(function (response) {
+                        vm.Videos = response.data.Videos;
+                        vm.loading_videos = false;
+                    }).catch(function (error) {
+                        console.log(error);
+                    })
+                },
+
+
+                resetAddCourseForm: function () {
+                    this.$refs['addCourseForm'].resetFields();
+                }
+                ,
+
+                resetEditCourseForm: function () {
+                    vm.GetEditCourse(vm.editCourseForm);
+                }
+                ,
+
+                deleteCoursePre: function (val) {
+                    vm.deleteQueryVisible = true;
+                    vm.deleteCourse = val;
+                }
+                ,
+
+                deleteOneCourse(val) {
+                    axios({
+                        url: "{% url 'admin:delete_courses' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {'id': val.id},
+                    })
+                    // withCredentials: true,
+                        .then(function (response) {
+                            if (response.data.success == 'success') {
+                                vm.$message.success(response.data.msg);
+                                vm.deleteQueryVisible = false;
+                                vm.loadCourses();
+                            } else {
+                                vm.$message.error(response.data.msg);
+                            }
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                }
+                ,
+
+
+                deleteAllSelected: function () {
+                    axios({
+                        url: "{% url 'admin:delete_selected_courses' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: this.multipleSelection,
+                    })
+                    // withCredentials: true,
+                        .then(function (response) {
+                            if (response.data.success == 'success') {
+                                vm.$message.success(response.data.msg);
+                                vm.deleteAllQueryVisible = false;
+                                vm.loadCourses();
+                            } else {
+                                vm.$message.error(response.data.msg);
+                            }
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                }
+                ,
+
+
+                deleteAllSelectedPre: function () {
+                    if (((this.multipleSelection) == undefined || (this.multipleSelection).length <= 0)) {
+                        this.$message.error("请先选中要删除的对象！")
+                    } else {
+                        vm.deleteAllQueryVisible = true;
+                    }
+                }
+                ,
+
+                prevideoview: function () {
+                    vm.playdialogVisible = true;
+                    axios({
+                        url: "{% url 'admin:pre_view_video' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {'videoid': vm.videoForm.VideoId},
+                    }).then(function (response) {
+                        if ('success' == response.data.success) {
+                            var player = new Aliplayer({
+                                    "id": "playerbox",
+                                    "vid": vm.videoForm.VideoId,
+                                    "playauth": response.data.data.playauth,
+                                    "qualitySort": "desc",
+                                    "format": "m3u8",
+                                    "mediaType": "video",
+                                    "encryptType": 1,
+                                    "width": "100%",
+                                    "height": "460px",
+                                    "autoplay": true,
+                                    "isLive": false,
+                                    "rePlay": false,
+                                    "playsinline": true,
+                                    "preload": true,
+                                    "loadDataTimeout": "10",
+                                    "language": "zh-cn",
+                                    "controlBarVisibility": "hover",
+                                    "useH5Prism": true
+                                }, function (player) {
+                                    player._switchLevel = 0;
+                                    console.log("播放器创建了。");
+                                }
+                            );
+
+                        } else {
+                            console.log("播放视频出错！")
+                        }
+                    })
+                },
+
+                handlepalyerClose(done) {
+                    this.$refs['player'].innerHTML = "<div class=\"prism-player\" id=\"playerbox\"></div>";
+                    done();
+                },
+
+            },
+
+        })
+    </script>
+{% endblock %}

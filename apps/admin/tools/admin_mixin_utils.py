@@ -1,0 +1,21 @@
+# apps/utils/mixin_utils.py
+
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.core.exceptions import PermissionDenied
+
+
+def superuser_only(function):
+    """Limit view to superusers only."""
+
+    def _inner(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        return function(request, *args, **kwargs)
+
+    return _inner
+
+class AdminLoginRequiredMixin(object):
+    @method_decorator(login_required(login_url='/singdl_admin/user_login/'))
+    def dispatch(self, request, *args, **kwargs):
+        return super(AdminLoginRequiredMixin, self).dispatch(request, *args, **kwargs)

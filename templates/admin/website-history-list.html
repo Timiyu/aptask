@@ -1,0 +1,435 @@
+{% extends 'PC/admin/base.html' %}
+{% load static %}
+{% block title %}历史访问记录{% endblock %}
+{% block css %}{% endblock %}
+{% block content %}
+    <div class="content">
+        <div class="container-fluid">
+
+            <!-- Page title box -->
+            <div class="page-title-box">
+                <ol class="breadcrumb float-right">
+                    <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">首页</a></li>
+                    <li class="breadcrumb-item active">访问记录列表</li>
+                </ol>
+                <h4 class="page-title">访问记录列表</h4>
+            </div>
+            <!-- End page title box -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card-box">
+                        <!-- 此区域禁用jinjia模板语言-->
+                        {% verbatim myblock %}
+                            <div id="historys" v-cloak>
+                                <div id="history_list">
+                                    <el-row>
+                                        <el-form :inline="true" :model="filter" size="small">
+                                            <el-row>
+                                                <el-form-item label="所属区域">
+                                                    <el-input v-model="filter.zone" placeholder="输入区域关键字"
+                                                              :width="50"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="用户名">
+                                                    <el-input v-model="filter.username" placeholder="输入用户名关键字"
+                                                              :width="50"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="访问IP">
+                                                    <el-input v-model="filter.ipaddress" placeholder="输入IP地址关键字"
+                                                              :width="50"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="平台">
+                                                    <el-input v-model="filter.platform" placeholder="输入平台关键字"
+                                                              :width="50"></el-input>
+                                                </el-form-item>
+                                            </el-row>
+                                            <el-row>
+                                                <el-form-item label="操作系统">
+                                                    <el-input v-model="filter.os" placeholder="输入操作系统关键字"
+                                                              :width="50"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="浏览器">
+                                                    <el-input v-model="filter.browser" placeholder="输入浏览器关键字"
+                                                              :width="50"></el-input>
+                                                </el-form-item>
+                                                <el-button type="primary" round size="small" @click="filterHistorys()">
+                                                    搜索
+                                                </el-button>
+                                                <el-button type="info" round size="small"
+                                                           @click="resetFilter()">
+                                                    重置
+                                                </el-button>
+                                            </el-row>
+                                        </el-form>
+                                    </el-row>
+                                    <el-table v-loading="loading"
+                                              element-loading-text="加载中"
+                                              element-loading-spinner="el-icon-loading"
+                                              @sort-change="sortChange"
+                                              ref="multipleTable"
+                                              :data="history_list"
+                                              tooltip-effect="dark"
+                                              style="width: 100%;"
+                                              :cell-style="cell_style"
+                                              @selection-change="handleSelectionChange">
+                                        <el-table-column
+                                                type="selection"
+                                                min-width="55">
+                                        </el-table-column>
+                                        <el-table-column
+                                                fixed="left"
+                                                prop="id"
+                                                label="ID编号"
+                                                min-width="120"
+                                                sortable>
+                                        </el-table-column>
+                                        <el-table-column
+                                                fixed="left"
+                                                prop="ipaddress"
+                                                label='IP地址'
+                                                min-width="140">
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="IP地址所属区域"
+                                                min-width="800"
+                                                show-overflow-tooltip>
+                                            <template slot-scope="scope">
+                                                <p v-html="scope.row.zone"></p>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="userinfo"
+                                                label="用户名"
+                                                min-width="140"
+                                        ></el-table-column>
+                                        <el-table-column
+                                                prop="platform"
+                                                label="平台"
+                                                min-width="140">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="os"
+                                                label="操作系统"
+                                                min-width="200"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="browser"
+                                                label="浏览器"
+                                                min-width="220"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="path"
+                                                label="访问路径"
+                                                min-width="450"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="device"
+                                                label="设备信息"
+                                                min-width="400"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                sortable
+                                                prop="addtime"
+                                                label="访问时间"
+                                                min-width="250"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column></el-table-column>
+                                        <el-table-column
+                                                fixed="right"
+                                                label="操作"
+                                                min-width="120">
+                                            <template slot-scope="scope">
+                                                <el-button @click="deletePicturesPre(scope.row)" type="danger"
+                                                           icon="el-icon-delete" circle
+                                                           size="mini">
+                                                </el-button>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+
+                                    <el-row>
+                                        <el-col :span="6">
+                                            <div class="grid-content bg-purple">
+                                                <div style="margin-top: 10px;">
+                                                    <!--
+                                                    <el-button type="primary" @click="openUploadPicturesForm()" round
+                                                               size="small">上传图片
+                                                    </el-button>
+                                                    -->
+                                                    <el-button type="danger" @click="deleteAllSelectedPre()"
+                                                               round
+                                                               size="small">删除选中
+                                                    </el-button>
+                                                    <el-button type="info" @click="toggleSelection()" round
+                                                               size="small">
+                                                        取消选中
+                                                    </el-button>
+                                                </div>
+                                            </div>
+                                        </el-col>
+                                        <el-col :span="10" :offset="2">
+                                            <div class="grid-content bg-purple-light">
+                                                <el-pagination
+                                                        @size-change="handleSizeChange"
+                                                        @current-change="handleCurrentChange"
+                                                        :current-page="currentpage"
+                                                        :page-sizes="[15, 25, 50, 100]"
+                                                        :page-size="pagesize"
+                                                        layout="total, sizes, prev, pager, next, jumper"
+                                                        :total="total"
+                                                        background
+                                                        style="margin-top: 10px;">
+                                                </el-pagination>
+                                            </div>
+                                        </el-col>
+                                    </el-row>
+
+
+                                    <el-dialog
+                                            title="提示"
+                                            v-model="historyToDelete"
+                                            :visible.sync="deleteQueryVisible"
+                                            width="30%"
+                                            center>
+                                        <span>确定删除这条记录吗？</span>
+                                        <span slot="footer" class="dialog-footer">
+                                        <el-button @click="deleteQueryVisible = false" type="info" round size="small">取 消</el-button>
+                                        <el-button type="primary"
+                                                   @click="deleteOneHistory(historyToDelete)" round
+                                                   size="small">确 定</el-button>
+                                    </span>
+                                    </el-dialog>
+
+                                    <el-dialog
+                                            title="提示"
+                                            v-model="deleteAllSelected"
+                                            :visible.sync="deleteAllQueryVisible"
+                                            width="30%"
+                                            center>
+                                        <span>确定删除选中记录吗？</span>
+                                        <span slot="footer" class="dialog-footer">
+                                            <el-button @click="deleteAllQueryVisible = false" type="info" round
+                                                       size="small">取 消</el-button>
+                                            <el-button type="primary"
+                                                       @click="deleteAllSelected()" round
+                                                       size="small">确定删除</el-button>
+                                        </span>
+                                    </el-dialog>
+                                </div>
+                            </div>
+                        {% endverbatim myblock %}
+                    </div>
+                </div>
+            </div> <!-- end row -->
+        </div> <!-- end container-fluid-->
+    </div> <!-- end contant-->
+{% endblock %}
+{% block javascript %}
+    <script>
+        var vm = new Vue({
+            el: '#historys',
+            data: {
+                history_list: [],
+                multipleSelection: [],
+                pagesize: 15, // 每页数量
+                currentpage: 1,
+                total: 0,
+                filter: {
+                    username: '',
+                    ipaddress: '',
+                    zone: '',
+                    os: '',
+                    platform: '',
+                    browser: '',
+                },
+                sort: {
+                    column_name: '',
+                    sort_type: null,
+                },
+                deleteAllQueryVisible: false,
+                historyToDelete: {},
+                deleteQueryVisible: false,
+                detailCourseForm: {},
+                formLabelWidth: '120px',
+                cell_style: {
+                    padding: 5,
+                },
+                loading: true,
+            },
+
+            created: function () {
+                this.loadHistory();
+            },
+
+            methods: {
+                toggleSelection(rows) {
+                    if (rows) {
+                        rows.forEach(row => {
+                            this.$refs.multipleTable.toggleRowSelection(row);
+                        });
+                    } else {
+                        this.$refs.multipleTable.clearSelection();
+                    }
+                },
+
+                handleSelectionChange(val) {
+                    this.multipleSelection = val;
+                    console.log(this.multipleSelection);
+                },
+
+                sortChange(column, prop, order) {
+
+                    //点击排序按钮后拿到column.order，可以发送column.order给后台，后台再根据什么排序来返回排序过后的数据
+                    console.log(column + '---' + column.prop + '---' + column.order);
+                    this.sort = {column_name: column.prop, sort_type: column.order};
+                    this.currentpage = 1;
+                    this.loadHistory();
+                    //输出的结果 [object Object]---name---ascending
+
+                },
+
+                loadHistory: function () {
+                    console.log(this.currentpage);
+                    console.log(this.pagesize);
+                    axios({
+                        url: "{% url 'admin:list_client_history' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        // withCredentials: true,
+                        data: {
+                            current_page: this.currentpage,
+                            page_size: this.pagesize,
+                            column_name: this.sort.column_name,
+                            sort_type: this.sort.sort_type,
+                            filter: this.filter,
+                        },
+                    })
+                        .then(function (response) {
+                            console.log(vm.history_list);
+                            vm.history_list = response.data.pageData;
+                            if (((vm.history_list) == undefined || (vm.history_list).length <= 0) && vm.currentpage > 1) {
+                                vm.currentpage = vm.currentpage - 1;
+                                vm.loadHistory();
+                            } else {
+                                vm.loading = false;
+                            }
+                            vm.total = response.data.total;
+                            console.log(response.data);
+                        }).catch(function (error) {
+                        console.log(error);
+                    });
+                },
+
+                handleSizeChange(val) {
+                    this.pagesize = val;
+                    this.loadHistory();
+                    console.log(`每页 ${val} 条`);
+                },
+
+                handleCurrentChange(val) {
+                    this.currentpage = val;
+                    this.loadHistory();
+                    console.log(`当前页: ${val}`);
+                },
+
+                filterHistorys: function () {
+                    this.currentpage = 1;
+                    this.loadHistory();
+                },
+
+                resetFilter: function () {
+                    this.filter.username = '';
+                    this.filter.ipaddress = '';
+                    this.filter.os = '';
+                    this.filter.platform = '';
+                    this.filter.zone = '';
+                    this.filter.browser = '';
+                    this.loadHistory();
+                },
+
+                deletePicturesPre: function (val) {
+                    vm.deleteQueryVisible = true;
+                    vm.historyToDelete = val;
+                },
+
+                deleteOneHistory(val) {
+                    axios({
+                        url: "{% url 'admin:delete_historys' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {'deleteitems': [val]},
+                    })
+                    // withCredentials: true,
+                        .then(function (response) {
+                            if (response.data.success == 'success') {
+                                vm.$message.success(response.data.msg);
+                                vm.deleteQueryVisible = false;
+                                vm.loadHistory();
+                            } else {
+                                vm.$message.error(response.data.msg);
+                            }
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                },
+
+
+                deleteAllSelected: function () {
+                    axios({
+                        url: "{% url 'admin:delete_historys' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {'deleteitems': this.multipleSelection},
+                    })
+                    // withCredentials: true,
+                        .then(function (response) {
+                            if (response.data.success == 'success') {
+                                vm.$message.success(response.data.msg);
+                                vm.deleteAllQueryVisible = false;
+                                vm.loadHistory();
+                            } else {
+                                vm.$message.error(response.data.msg);
+                            }
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                },
+
+
+                deleteAllSelectedPre: function () {
+                    if (((this.multipleSelection) == undefined || (this.multipleSelection).length <= 0)) {
+                        this.$message.error("请先选中要删除的记录！");
+                    } else if ((this.multipleSelection).length > 25) {
+                        this.$message.error("一次删除记录不能大于25条！");
+                    } else {
+                        vm.deleteAllQueryVisible = true;
+                    }
+                },
+            },
+
+        })
+    </script>
+{% endblock %}

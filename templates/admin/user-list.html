@@ -1,0 +1,407 @@
+{% extends 'PC/admin/base.html' %}
+{% load static %}
+{% block title %}用户列表{% endblock %}
+{% block css %}
+    <style>
+        .demo-table-expand {
+            font-size: 0;
+        }
+
+        .demo-table-expand label {
+            width: 90px;
+            color: #99a9bf;
+        }
+
+        .demo-table-expand .el-form-item {
+            margin-right: 0;
+            margin-bottom: 0;
+            width: 50%;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="content">
+        <div class="container-fluid">
+
+            <!-- Page title box -->
+            <div class="page-title-box">
+                <ol class="breadcrumb float-right">
+                    <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="javascript:void(0);">用户管理</a></li>
+                    <li class="breadcrumb-item active">用户列表</li>
+                </ol>
+                <h4 class="page-title">用户列表</h4>
+            </div>
+            <!-- End page title box -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card-box">
+                        <!-- 此区域禁用jinjia模板语言-->
+                        {% verbatim myblock %}
+                            <div id="users" v-cloak>
+                                <div id="users_list" v-show="userslistsshow">
+                                    <el-row>
+                                        <el-form :inline="true" :model="filter" size="small">
+                                            <el-form-item label="用户名">
+                                                <el-input v-model="filter.username" placeholder="输入用户名关键字"
+                                                          :width="50"></el-input>
+                                            </el-form-item>
+                                            <el-form-item label="手机号">
+                                                <el-input v-model="filter.phone" placeholder="输入手机号"
+                                                          :width="50"></el-input>
+                                            </el-form-item>
+                                            <el-form-item label="是否会员">
+                                                <el-select v-model="filter.vip" clearable placeholder="请选择">
+                                                    <el-option value="" label="所有用户"></el-option>
+                                                    <el-option value="0" label="普通用户"></el-option>
+                                                    <el-option value="1" label="会员用户"></el-option>
+                                                </el-select>
+                                            </el-form-item>
+                                            <el-button type="primary" round size="small" @click="filterPictures">搜索
+                                            </el-button>
+                                            <el-button type="info" round size="small"
+                                                       @click="resetFilter()">
+                                                重置
+                                            </el-button>
+                                        </el-form>
+                                    </el-row>
+                                    <el-table v-loading="loading"
+                                              element-loading-text="加载中"
+                                              element-loading-spinner="el-icon-loading"
+                                              @sort-change="sortChange"
+                                              :data="users_list"
+                                              tooltip-effect="dark"
+                                              style="width: 100%;"
+                                              :cell-style="cell_style">
+                                        <el-table-column type="expand" fixed="left">
+                                            <template slot-scope="props">
+                                                <el-form label-position="left" class="demo-table-expand">
+                                                    <el-form-item label="用户ID">
+                                                        <span>{{ props.row.id }}</span>
+                                                    </el-form-item>
+                                                    <el-form-item label="用户名">
+                                                        <span>{{ props.row.username }}</span>
+                                                    </el-form-item>
+                                                    <el-form-item label="手机号">
+                                                        <span>{{ props.row.phone }}</span>
+                                                    </el-form-item>
+                                                    <el-form-item label="邮箱">
+                                                        <span>{{ props.row.email }}</span>
+                                                    </el-form-item>
+                                                    <el-form-item label="会员有效期" v-if="props.row.vip=='会员用户'">
+                                                        <span>{{ props.row.start_date }}-{{ props.row.end_date }}</span>
+                                                    </el-form-item>
+                                                </el-form>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="id"
+                                                label="ID编号"
+                                                min-width="120"
+                                                fixed="left"
+                                                sortable
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label='头像'
+                                                fixed="left"
+                                                prop="profile_picture"
+                                                min-width="100">
+                                            <template slot-scope="scope">
+                                                <el-image :src="scope.row.profile_picture"
+                                                          :alt="scope.row.nick_name" style="width: 30px;height: 30px;"
+                                                          fit="fill">
+                                                </el-image>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                fixed="left"
+                                                prop="username"
+                                                label="用户名"
+                                                min-width="140"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                fixed="left"
+                                                prop="phone"
+                                                label="手机号"
+                                                min-width="140"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="vip"
+                                                label="是否会员"
+                                                min-width="120">
+                                            <template slot-scope="scope">
+                                                <el-tag
+                                                        effect="dark"
+                                                        :key="scope.row.vip"
+                                                        :type="scope.row.vip === '会员用户' ? 'warning' : 'info'"
+                                                        disable-transitions>{{ scope.row.vip }}</el-tag>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="last_login"
+                                                label="最后登录时间"
+                                                min-width="240"
+                                                sortable
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                            <el-table-column
+                                                prop="date_joined"
+                                                label="注册时间"
+                                                min-width="240"
+                                                sortable
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                            <el-table-column
+                                                prop="update_time"
+                                                label="更新时间"
+                                                min-width="240"
+                                                sortable
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column></el-table-column>
+                                        <el-table-column
+                                                fixed="right"
+                                                label="操作"
+                                                min-width="100">
+                                            <template slot-scope="scope">
+                                                <el-button type="primary" icon="el-icon-edit" circle
+                                                           size="mini"
+                                                           @click="openEditForm(scope.row)"></el-button>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+                                    <el-row>
+                                        <el-col :span="6">
+                                        </el-col>
+                                        <el-col :span="10" :offset="2">
+                                            <div class="grid-content bg-purple-light">
+                                                <el-pagination
+                                                        @size-change="handleSizeChange"
+                                                        @current-change="handleCurrentChange"
+                                                        :current-page="currentpage"
+                                                        :page-sizes="[15, 25, 50, 100]"
+                                                        :page-size="pagesize"
+                                                        layout="total, sizes, prev, pager, next, jumper"
+                                                        :total="total"
+                                                        background
+                                                        style="margin-top: 10px;">
+                                                </el-pagination>
+                                            </div>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+                            </div>
+                        {% endverbatim myblock %}
+                    </div>
+                </div>
+            </div> <!-- end row -->
+        </div> <!-- end container-fluid-->
+    </div> <!-- end contant-->
+{% endblock %}
+{% block javascript %}
+
+
+    <script>
+        var vm = new Vue({
+            el: '#users',
+            data: {
+                userslistsshow: true,
+                editformshow: false,
+                detailformshow: false,
+                headertitle: "返回用户列表",
+                users_list: [],
+                multipleSelection: [],
+                pagesize: 15, // 每页数量
+                currentpage: 1,
+                total: 0,
+                filter: {
+                    username: '',
+                    phone: '',
+                    vip: '',
+                },
+                sort: {
+                    column_name: '',
+                    sort_type: null,
+                },
+                allCategory: [],
+                formLabelWidth: '120px',
+                labelPosition: 'left',
+                cell_style: {
+                    padding: 5,
+                },
+                pictureCate: [],
+                userForm: {
+                    id: null,
+                },
+                loading: true,
+            },
+
+            created: function () {
+                this.loadUsers();
+            },
+
+            methods: {
+                sortChange(column, prop, order) {
+
+                    //点击排序按钮后拿到column.order，可以发送column.order给后台，后台再根据什么排序来返回排序过后的数据
+                    console.log(column + '---' + column.prop + '---' + column.order);
+                    this.sort = {column_name: column.prop, sort_type: column.order};
+                    this.currentpage = 1;
+                    this.loadUsers();
+                    //输出的结果 [object Object]---name---ascending
+
+                },
+
+                loadUsers: function () {
+                    console.log(this.currentpage);
+                    console.log(this.pagesize);
+                    axios({
+                        url: "{% url 'admin:list_users' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        // withCredentials: true,
+                        data: {
+                            current_page: this.currentpage,
+                            page_size: this.pagesize,
+                            column_name: this.sort.column_name,
+                            sort_type: this.sort.sort_type,
+                            filter: this.filter,
+                        },
+                    })
+                        .then(function (response) {
+                            console.log(vm.users_list);
+                            vm.users_list = response.data.pageData;
+                            if (((vm.users_list) == undefined || (vm.users_list).length <= 0) && vm.currentpage > 1) {
+                                vm.currentpage = vm.currentpage - 1;
+                                vm.loadUsers();
+                            } else {
+                                vm.loading = false;
+                            }
+                            vm.total = response.data.total;
+                            console.log(response.data);
+                        }).catch(function (error) {
+                        console.log(error);
+                    });
+                },
+
+                handleSizeChange(val) {
+                    this.pagesize = val;
+                    this.loadUsers();
+                    console.log(`每页 ${val} 条`);
+                },
+
+                handleCurrentChange(val) {
+                    this.currentpage = val;
+                    this.loadUsers();
+                    console.log(`当前页: ${val}`);
+                },
+
+                filterPictures: function () {
+                    this.currentpage = 1;
+                    this.loadUsers();
+                },
+
+                resetFilter:function(){
+                    this.filter.usernmae='';
+                    this.filter.phone='';
+                    this.filter.vip='';
+                    this.loadUsers();
+                },
+
+                goBackUsersList: function (val) {
+                    if (val == 'editformshow') {
+                        vm.editformshow = false;
+                    } else if (val == 'detailformshow') {
+                        vm.detailformshow = false;
+                    }
+                    vm.loadUsers();
+                    vm.userslistsshow = true;
+                },
+
+                openEditForm: function (val) {
+                    axios({
+                        url: "{% url 'admin:edit_pictures' %}",
+                        method: 'GET',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        params: val,
+                    }).then(function (response) {
+                        if (response.data.success == 'success') {
+                            console.log(response);
+                            vm.setPicture(response);
+                            vm.userslistsshow = false;
+                            vm.editformshow = true;
+                        } else {
+                            vm.message('加载图片详情失败！');
+                        }
+
+                    })
+                },
+
+                submitForm(formName) {
+                    this.$refs[formName].validate((valid) => {
+                        if (valid) {
+                            axios({
+                                url: '{% url 'admin:edit_pictures' %}',
+                                method: 'POST',
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Access-Control-Allow-Origin": "*",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                data: vm.userForm,
+                            }).then(function (response) {
+                                if ('success' == response.data.success) {
+                                    vm.setPicture(response);
+                                    vm.$message.success(response.data.msg);
+                                    console.log(response.data.data);
+                                } else {
+                                    vm.$message.error(response.data.msg);
+                                }
+                            }).catch(function (error) {
+                                console.log(error);
+                            });
+                        } else {
+                            console.log('error submit!!');
+                            return false;
+                        }
+                    });
+                },
+
+                resetForm() {
+                    axios({
+                        url: "{% url 'admin:edit_pictures' %}",
+                        method: 'GET',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        params: {id: vm.userForm.id},
+                    }).then(function (response) {
+                        if (response.data.success == 'success') {
+                            console.log(response);
+                            vm.setPicture(response);
+                            vm.$message.success("图片信息编辑已重置！")
+                        } else {
+                            vm.$message.error('图片信息重置失败！');
+                        }
+
+                    })
+                },
+            },
+
+        })
+    </script>
+{% endblock %}

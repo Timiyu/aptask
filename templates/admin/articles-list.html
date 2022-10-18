@@ -1,0 +1,962 @@
+{% extends 'PC/admin/base.html' %}
+{% load static %}
+{% block title %}博客列表{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="https://g.alicdn.com/de/prismplayer/2.8.1/skins/default/aliplayer-min.css"/>
+{% endblock %}
+{% block content %}
+    <div class="content" style="min-width: 1200px;">
+        <div class="container-fluid">
+
+            <!-- Page title box -->
+            <div class="page-title-box">
+                <ol class="breadcrumb float-right">
+                    <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="javascript:void(0);">博客管理</a></li>
+                    <li class="breadcrumb-item active">博客列表</li>
+                </ol>
+                <h4 class="page-title">博客列表</h4>
+            </div>
+            <!-- End page title box -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card-box">
+                        <div id="articles" v-cloak>
+                            <div id="article_list" v-show="articlelistshow">
+                                <el-row>
+                                    <el-form :inline="true" :model="filter" size="small">
+                                        <el-form-item label="文章标题">
+                                            <el-input v-model="filter.ArticleTitle" placeholder="输入文章标题关键字"
+                                                      :width="50"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="分类名称">
+                                            <el-input v-model="filter.CategoryName" placeholder="输入分类名称关键字"
+                                                      :width="50"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="文章标签">
+                                            <el-input v-model="filter.ArticleTags" placeholder="输入文章标签关键字"
+                                                      :width="50"></el-input>
+                                        </el-form-item>
+                                        <el-button type="primary" round size="small" @click="filterArticle">搜索
+                                        </el-button>
+                                        <el-button type="info" round size="small"
+                                                   @click="resetFilter()">
+                                            重置
+                                        </el-button>
+                                    </el-form>
+                                </el-row>
+                                <el-table v-loading="loading"
+                                          element-loading-text="加载中"
+                                          element-loading-spinner="el-icon-loading"
+                                          @sort-change="sortChange"
+                                          ref="multipleTable"
+                                          :data="article_list"
+                                          tooltip-effect="dark"
+                                          style="width: 100%;"
+                                          :cell-style="cell_style"
+                                          @selection-change="handleSelectionChange">
+                                    <el-table-column
+                                            type="selection"
+                                            min-width="55">
+                                    </el-table-column>
+                                    <el-table-column
+                                            fixed="left"
+                                            prop="id"
+                                            label="ID编号"
+                                            min-width="120"
+                                            sortable
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column
+                                            fixed="left"
+                                            prop="ArticleTitle"
+                                            label="文章标题"
+                                            min-width="220">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="ArticleAuthor"
+                                            label="作者"
+                                            min-width="150">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="CategoryName"
+                                            label="文章分类"
+                                            min-width="150"
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="ArticleDescribe"
+                                            label="文章概要"
+                                            width="250"
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column
+                                            sortable
+                                            prop="ArticleReadNum"
+                                            label="阅读数"
+                                            min-width="100"
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column
+                                            label="文章标签"
+                                            min-width="450">
+                                        <template slot-scope="scope">
+                                            <div class="tag-group">
+                                                <el-tag
+                                                        type="danger"
+                                                        style="margin: 5px;"
+                                                        size="small"
+                                                        v-for="item in scope.row.ArticleTags"
+                                                        :key="item" v-text="item">
+                                                </el-tag>
+                                            </div>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="ArticleSlug"
+                                            label="标识"
+                                            min-width="250"
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="AddDate_Time"
+                                            label="添加时间"
+                                            sortable
+                                            min-width="240"
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="UpDate_Time"
+                                            label="更新时间"
+                                            sortable
+                                            min-width="240"
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column width="1"></el-table-column>
+                                    <el-table-column
+                                            fixed="right"
+                                            label="操作"
+                                            min-width="200">
+                                        <template slot-scope="scope">
+                                            <el-button type="primary" icon="el-icon-edit" circle
+                                                       size="mini"
+                                                       @click="openEditForm(scope.row)"></el-button>
+                                            <el-button @click="deleteArticlePre(scope.row)" type="danger"
+                                                       icon="el-icon-delete" circle
+                                                       size="mini">
+                                            </el-button>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+
+                                <el-row>
+                                    <el-col :span="6">
+                                        <div class="grid-content bg-purple">
+                                            <div style="margin-top: 10px;">
+                                                <el-button type="primary" @click="openAddForm()" round
+                                                           size="small">写文章
+                                                </el-button>
+                                                <el-button type="danger" @click="deleteAllSelectedPre()"
+                                                           round
+                                                           size="small">删除选中
+                                                </el-button>
+                                                <el-button type="info" @click="toggleSelection()" round
+                                                           size="small">
+                                                    取消选中
+                                                </el-button>
+                                            </div>
+                                        </div>
+                                    </el-col>
+                                    <el-col :span="10" :offset="2">
+                                        <div class="grid-content bg-purple-light">
+                                            <el-pagination
+                                                    @size-change="handleSizeChange"
+                                                    @current-change="handleCurrentChange"
+                                                    :current-page="currentpage"
+                                                    :page-sizes="[15, 25, 50, 100]"
+                                                    :page-size="pagesize"
+                                                    layout="total, sizes, prev, pager, next, jumper"
+                                                    :total="total"
+                                                    background
+                                                    style="margin-top: 10px;">
+                                            </el-pagination>
+                                        </div>
+                                    </el-col>
+                                </el-row>
+
+
+                                <el-dialog
+                                        title="提示"
+                                        v-model="deleteCourse"
+                                        :visible.sync="deleteQueryVisible"
+                                        width="30%"
+                                        center>
+                                    <span>确定删除这篇文章吗？</span>
+                                    <span slot="footer" class="dialog-footer">
+                                        <el-button @click="deleteQueryVisible = false" type="info" round size="small">取 消</el-button>
+                                        <el-button type="primary"
+                                                   @click="deleteOneArticle(deleteCourse)" round
+                                                   size="small">确 定</el-button>
+                                    </span>
+                                </el-dialog>
+
+                                <el-dialog
+                                        title="提示"
+                                        v-model="deleteAllSelected"
+                                        :visible.sync="deleteAllQueryVisible"
+                                        width="30%"
+                                        center>
+                                    <span>确定删除选中文章吗？</span>
+                                    <span slot="footer" class="dialog-footer">
+                                        <el-button @click="deleteAllQueryVisible = false" type="info" round
+                                                   size="small">取 消</el-button>
+                                        <el-button type="primary"
+                                                   @click="deleteAllSelected()" round
+                                                   size="small">确定删除</el-button>
+                                    </span>
+                                </el-dialog>
+                            </div>
+                            <div id="addArticleForm" v-show="addformshow">
+                                <el-page-header :title="headertitle" @back="goBackArticleList('addformshow')"
+                                                content="写文章">
+                                </el-page-header>
+                                <el-row :gutter="20">
+                                    <el-col :span="8">
+                                        <el-form :model="addArticleForm" ref="addArticleForm"
+                                                 label-width="100px" style="margin-top: 40px">
+                                            <el-form-item label="文章标题" prop="ArticleTitle"
+                                                          :rules="[{ required: true, message: '请输入文章标题', trigger:'blur' }, { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'change' }]">
+                                                <el-input v-model="addArticleForm.ArticleTitle"
+                                                          placeholder="输入文章标题"></el-input>
+                                            </el-form-item>
+                                            <el-form-item label="课程分类"
+                                                          :rules="[{ required: true, message: '选择课程分类'}]">
+                                                <el-cascader v-model="addArticleForm.Category"
+                                                             :props="{ checkStrictly: true }"
+                                                             :options="ArticleCate"
+                                                             placeholder="选择课程分类"
+                                                             style="width: 100%;" clearable filterable
+                                                             @focus="loadArticleCate()"></el-cascader>
+                                            </el-form-item>
+                                            <el-form-item label="文章概述" prop="ArticleDescribe"
+                                                          :rules="[{ required: true, message: '请输入文章概述', trigger:'blur' },{ min: 1, max: 200, message: '长度在 1 到 200 个字符', trigger: 'change' }]">
+                                                <el-input v-model="addArticleForm.ArticleDescribe"
+                                                          placeholder="输入文章概述" type="textarea"></el-input>
+                                            </el-form-item>
+
+                                            <el-form-item label="文章标签">
+                                                <template>
+                                                    <el-select
+                                                            v-model="addArticleForm.ArticleTags"
+                                                            value-key="id"
+                                                            multiple
+                                                            filterable
+                                                            allow-create
+                                                            default-first-option
+                                                            style="width: 100%;"
+                                                            placeholder="请输入文章标签，按回车键">
+                                                        <el-option
+                                                                v-for="item in addArticleForm.ArticleTags"
+                                                                :key="item.id"
+                                                                :label="item"
+                                                                :value="item">
+                                                        </el-option>
+                                                    </el-select>
+                                                </template>
+                                            </el-form-item>
+                                            <el-form-item label="文章封面"
+                                                          :rules="[{ required: false, message: '选择课文章封面'}]">
+                                                <el-cascader v-model="pictureSelectCate"
+                                                             :props="{ checkStrictly: true }"
+                                                             :options="pictureCate"
+                                                             placeholder="选择图片类型"
+                                                             style="width: 30%;" clearable filterable
+                                                             @focus="loadPictureCate()">
+                                                </el-cascader>
+                                                <el-select v-model="addArticleForm.ArticleCover"
+                                                           filterable
+                                                           placeholder="请选择文章封面"
+                                                           style="width: 68%;"
+                                                           :loading="loading_pictures"
+                                                           @focus="loadPictures()">
+                                                    <el-option v-for="item in Pictures"
+                                                               :key="item.id"
+                                                               :label="item.ImageTitle"
+                                                               :value="item.ImageURL">
+                                                            <span style="float:left">
+                                                                <el-image :src="item.ImageURLTumb"
+                                                                          style="width: 20px;height: 20px;"></el-image></span>
+                                                        <span style="float:right;color:#8492a6;font-size:13px;">{{ item.ImageTitle }}</span>
+                                                    </el-option>
+                                                </el-select>
+                                            </el-form-item>
+                                            <el-form-item label="文章封面预览">
+                                                <el-row style="height: 200px;">
+                                                    <el-col :span="24">
+                                                        <el-popover
+                                                                placement="right"
+                                                                title=""
+                                                                trigger="hover">
+                                                            <el-image slot="reference"
+                                                                      :src="addArticleForm.ArticleCover +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                      :alt="addArticleForm.ArticleCover +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                      style="margin-top: 10px;max-width: 100%; max-height:120px;">
+                                                            </el-image>
+                                                            <div slot="error" class="image-slot">
+                                                                <i class="el-icon-picture-outline"></i>
+                                                            </div>
+                                                            <el-image
+                                                                    :src="addArticleForm.ArticleCover +'?x-oss-process=image/resize,l_400,s_400'"></el-image>
+                                                        </el-popover>
+                                                    </el-col>
+                                                </el-row>
+                                            </el-form-item>
+                                            <el-form-item>
+                                                <el-button type="primary" @click="addNewArticle()">提交
+                                                </el-button>
+                                                <el-button @click="resetaddArticleForm()">重置</el-button>
+                                            </el-form-item>
+                                        </el-form>
+                                    </el-col>
+                                    <el-col :span="16">
+                                        <textarea id="tinymce-add"></textarea>
+                                    </el-col>
+                                </el-row>
+                            </div>
+
+                            <div id="editArticleForm" v-show="editformshow">
+                                <el-page-header :title="headertitle" @back="goBackArticleList('editformshow')"
+                                                content="编辑文章">
+                                </el-page-header>
+                                <el-row :gutter="20">
+                                    <el-col :span="8">
+                                        <el-form :model="editArticleForm" ref="editArticleForm"
+                                                 label-width="100px" style="margin-top: 20px">
+                                            <el-form-item label="文章标题" prop="ArticleTitle"
+                                                          :rules="[{ required: true, message: '请输入文章标题', trigger:'blur' }, { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'change' }]">
+                                                <el-input v-model="editArticleForm.ArticleTitle"
+                                                          placeholder="输入文章标题"></el-input>
+                                            </el-form-item>
+                                            <el-form-item label="文章分类"
+                                                          :rules="[{ required: true, message: '选择文章分类'}]">
+                                                <el-cascader v-model="editArticleForm.Category"
+                                                             :props="{ checkStrictly: true }"
+                                                             :options="ArticleCate"
+                                                             :placeholder="editArticleForm.CategoryLabel"
+                                                             style="width: 100%;" clearable filterable
+                                                             @focus="loadArticleCate()"></el-cascader>
+                                            </el-form-item>
+                                            <el-form-item label="文章概述" prop="ArticleDescribe"
+                                                          :rules="[{ required: true, message: '请输入文章概述', trigger:'blur' },{ min: 1, max: 200, message: '长度在 1 到 200 个字符', trigger: 'change' }]">
+                                                <el-input v-model="editArticleForm.ArticleDescribe"
+                                                          placeholder="输入文章概述" type="textarea"></el-input>
+                                            </el-form-item>
+                                            <el-form-item label="文章标签">
+                                                <template>
+                                                    <el-select
+                                                            v-model="editArticleForm.ArticleTags"
+                                                            value-key="id"
+                                                            multiple
+                                                            filterable
+                                                            allow-create
+                                                            default-first-option
+                                                            style="width: 100%;"
+                                                            placeholder="请输入文章标签，按回车键">
+                                                        <el-option
+                                                                v-for="item in editArticleForm.ArticleTags"
+                                                                :key="item.id"
+                                                                :label="item"
+                                                                :value="item">
+                                                        </el-option>
+                                                    </el-select>
+                                                </template>
+                                            </el-form-item>
+                                            <el-form-item label="文章封面"
+                                                          :rules="[{ required: false, message: '选择文章封面'}]">
+                                                <el-cascader v-model="pictureSelectCate"
+                                                             :props="{ checkStrictly: true }"
+                                                             :options="pictureCate"
+                                                             placeholder="选择图片类型"
+                                                             style="width: 30%;" clearable filterable
+                                                             @focus="loadPictureCate()">
+                                                </el-cascader>
+                                                <el-select v-model="editArticleForm.ArticleCover"
+                                                           filterable
+                                                           placeholder="请选择文章封面"
+                                                           style="width: 68%;"
+                                                           :loading="loading_pictures"
+                                                           @focus="loadPictures()">
+                                                    <el-option v-for="item in Pictures"
+                                                               :key="item.id"
+                                                               :label="item.ImageTitle"
+                                                               :value="item.ImageURL">
+                                                            <span style="float:left">
+                                                                <el-image :src="item.ImageURLTumb"
+                                                                          style="width: 20px;height: 20px;"
+                                                                          lazy></el-image></span>
+                                                        <span style="float:right;color:#8492a6;font-size:13px;"
+                                                              v-text="item.ImageTitle"></span>
+                                                    </el-option>
+                                                </el-select>
+                                            </el-form-item>
+                                            <el-form-item label="文章封面预览">
+                                                <el-row style="height: 200px;">
+                                                    <el-col :span="24">
+                                                        <el-popover
+                                                                placement="right"
+                                                                title=""
+                                                                trigger="hover">
+                                                            <el-image slot="reference"
+                                                                      :src="editArticleForm.ArticleCover +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                      :alt="editArticleForm.ArticleCover +'?x-oss-process=image/resize,l_120,s_120'"
+                                                                      style="margin-top: 10px;max-width: 100%; max-height:120px;">
+                                                                <div slot="error" class="image-slot">
+                                                                    <i class="el-icon-picture-outline"></i>
+                                                                </div>
+                                                            </el-image>
+                                                            <el-image
+                                                                    :src="editArticleForm.ArticleCover +'?x-oss-process=image/resize,l_400,s_400'"></el-image>
+                                                        </el-popover>
+                                                    </el-col>
+                                                </el-row>
+                                            </el-form-item>
+                                            <el-form-item>
+                                                <el-button type="primary" @click="saveEditArticle()">保存
+                                                </el-button>
+                                                <el-button @click="reseteditArticleForm()">重置</el-button>
+                                            </el-form-item>
+                                        </el-form>
+                                    </el-col>
+                                    <el-col :span="16">
+                                        <textarea id="tinymce-edit"></textarea>
+                                    </el-col>
+                                </el-row>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- end row -->
+        </div> <!-- end container-fluid-->
+    </div> <!-- end contant-->
+{% endblock %}
+{% block javascript %}
+    <script src="{% static 'admin/libs/tinymce/js/tinymce/tinymce.min.js' %}"></script>
+    <script>
+        tinymce.init({
+            selector: '#tinymce-edit',
+            language_url: "{% static 'admin/libs/tinymce/js/tinymce/langs/zh_CN.js' %}",
+            language: 'zh_CN',
+            plugins: 'advlist autolink link image lists toc hr codesample paste table preview directionality textcolor colorpicker fullscreen searchreplace save print lineheight',
+            toolbar: ['undo redo save | fontselect | fontsizeselect| forecolor backcolor | formatselect | hr bold italic underline strikethrough searchreplace', 'codesample ltr rtl subscript superscript alignleft aligncenter alignright alignjustify lineheight | toc bullist numlist outdent indent table | removeformat | link image | print preview fullscreen',],
+            menubar: false,
+            branding: false,
+            height: 600,
+            save_enablewhendirty: false,
+            save_onsavecallback: function () {
+                vm.setEditContent();
+                vm.saveEditArticle();
+            },
+            paste_data_images: true,
+            automatic_uploads: true,
+            setup: function (editor) {
+                editor.on('input change undo redo execCommand KeyUp', function (e) {
+                    vm.setEditContent();
+                })
+            },
+            images_upload_handler: function (blobInfo, success, failure) {
+                var form = new FormData();
+                form.append('file', blobInfo.blob(), blobInfo.filename());
+                $.ajax({
+                    url: "{% url 'admin:upload_blog_imgae' %}",
+                    type: "post",
+                    data: form,
+                    headers: {'X-CSRFToken': "{{ csrf_token }}"},
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        success(data.location);
+                    },
+                    error: function (e) {
+                        alert("图片上传失败");
+                    }
+                });
+            },
+        });
+
+        tinymce.init({
+            selector: '#tinymce-add',
+            language_url: "{% static 'admin/libs/tinymce/js/tinymce/langs/zh_CN.js' %}",
+            language: 'zh_CN',
+            plugins: 'advlist autolink link image lists toc hr codesample paste table preview directionality textcolor colorpicker fullscreen searchreplace save print lineheight',
+            toolbar: ['undo redo save | fontselect | fontsizeselect| forecolor backcolor | formatselect | hr bold italic underline strikethrough searchreplace', 'codesample ltr rtl subscript superscript alignleft aligncenter alignright alignjustify lineheight | toc bullist numlist outdent indent table | removeformat | link image | print preview fullscreen',],
+            menubar: false,
+            branding: false,
+            height: 600,
+            save_enablewhendirty: false,
+            save_onsavecallback: function () {
+                vm.setAddContent();
+                vm.addNewArticle();
+            },
+            paste_data_images: true,
+            automatic_uploads: true,
+            setup: function (editor) {
+                editor.on('input change undo redo execCommand KeyUp', function (e) {
+                    vm.setAddContent();
+                })
+            },
+            images_upload_handler: function (blobInfo, success, failure) {
+                var form = new FormData();
+                form.append('file', blobInfo.blob(), blobInfo.filename());
+                $.ajax({
+                    url: "{% url 'admin:upload_blog_imgae' %}",
+                    type: "post",
+                    data: form,
+                    headers: {'X-CSRFToken': "{{ csrf_token }}"},
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        success(data.location);
+                    },
+                    error: function (e) {
+                        alert("图片上传失败");
+                    }
+                });
+            },
+        });
+    </script>
+
+
+    <script>
+        var vm = new Vue({
+            el: '#articles',
+            data: {
+                articlelistshow: true,
+                addformshow: false,
+                editformshow: false,
+                detailformshow: false,
+                headertitle: "返回文章列表",
+                article_list: [],
+                multipleSelection: [],
+                pagesize: 15, // 每页数量
+                currentpage: 1,
+                total: 0,
+                filter: {
+                    ArticleTitle: '',
+                    CategoryName: '',
+                    ArticleTags: '',
+                },
+                sort: {
+                    column_name: '',
+                    sort_type: null,
+                },
+                Pictures: [],
+                Videos: [],
+                addArticleForm: {
+                    ArticleTitle: '',
+                    Category: '',
+                    ArticleDescribe: '',
+                    ArticleCover: '',
+                    ArticleContent: '请输入文章内容',
+                    ArticleTags: [],
+                },
+                deleteAllQueryVisible: false,
+                deleteCourse: {},
+                deleteQueryVisible: false,
+                editArticleForm: {
+                    id: null,
+                    ArticleTitle: '',
+                    Category: '',
+                    CategoryLabel: '',
+                    ArticleDescribe: '',
+                    ArticleCover: '',
+                    ArticleContent: '请输入文章内容',
+                    ArticleTags: [],
+                    CourseFeeType: '',
+                },
+                ArticleCate: [],
+                formLabelWidth: '120px',
+                labelPosition: 'left',
+                cell_style: {
+                    padding: 5,
+                },
+                pictureSelectCate: '',
+                pictureCate: [],
+                loading_pictures: true,
+                loading: true,
+            },
+
+            created: function () {
+                this.loadArticles();
+            }
+            ,
+
+            methods: {
+                toggleSelection(rows) {
+                    if (rows) {
+                        rows.forEach(row => {
+                            this.$refs.multipleTable.toggleRowSelection(row);
+                        });
+                    } else {
+                        this.$refs.multipleTable.clearSelection();
+                    }
+                }
+                ,
+
+                handleSelectionChange(val) {
+                    this.multipleSelection = val;
+                    console.log(this.multipleSelection);
+                }
+                ,
+
+                sortChange(column, prop, order) {
+
+                    //点击排序按钮后拿到column.order，可以发送column.order给后台，后台再根据什么排序来返回排序过后的数据
+                    console.log(column + '---' + column.prop + '---' + column.order);
+                    this.sort = {column_name: column.prop, sort_type: column.order};
+                    this.currentpage = 1;
+                    this.loadArticles();
+                    //输出的结果 [object Object]---name---ascending
+
+                }
+                ,
+
+                loadArticles: function () {
+                    console.log(this.currentpage);
+                    console.log(this.pagesize);
+                    axios({
+                        url: "{% url 'admin:blogs_list' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        // withCredentials: true,
+                        data: {
+                            current_page: this.currentpage,
+                            page_size: this.pagesize,
+                            column_name: this.sort.column_name,
+                            sort_type: this.sort.sort_type,
+                            filter: this.filter,
+                        },
+                    })
+                        .then(function (response) {
+                            console.log(vm.article_list);
+                            vm.article_list = response.data.pageData;
+                            if (((vm.article_list) === undefined || (vm.article_list).length <= 0) && vm.currentpage > 1) {
+                                vm.currentpage = vm.currentpage - 1;
+                                vm.loadArticles();
+                            } else {
+                                vm.loading = false;
+                            }
+                            vm.total = response.data.total;
+                            console.log(response.data);
+                        }).catch(function (error) {
+                        console.log(error);
+                    });
+                }
+                ,
+
+                loadPictureCate: function () {
+                    axios({
+                        url: "{% url 'admin:get_picture_cate' %}",
+                        method: 'GET',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                    }).then(function (response) {
+                        vm.pictureCate = response.data.resp_picture_cate;
+                    })
+                }
+                ,
+
+                loadArticleCate: function () {
+                    axios({
+                        url: "{% url 'admin:get_all_blog_category' %}",
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        params: {},
+                    }).then(function (response) {
+                        vm.ArticleCate = response.data.allcategory;
+                        console.log(response);
+                    }).catch(function (error) {
+                        console.log(error);
+
+                    })
+                }
+                ,
+
+                GetEditArticle: function (val) {
+                    axios({
+                        url: "{% url 'admin:get_blog' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: val,
+                    }).then(function (response) {
+                        vm.editArticleForm = response.data.Article;
+                        tinymce.get('tinymce-edit').setContent(vm.editArticleForm.ArticleContent);
+                        console.log(response);
+                        console.log(vm.editArticleForm);
+                    }).catch(function (error) {
+                        console.log(error);
+
+                    })
+                }
+                ,
+
+
+                saveEditArticle: function () {
+                    this.$refs["editArticleForm"].validate((valid) => {
+                        if (valid) {
+                            axios({
+                                url: "{% url 'admin:edit_blog' %}",
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Access-Control-Allow-Origin": "*",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                data: vm.editArticleForm,
+                            }).then(function (response) {
+                                if ('success' == response.data.success) {
+                                    vm.$message.success(response.data.message);
+                                    vm.GetEditArticle(vm.editArticleForm);
+                                } else {
+                                    vm.$message.error(response.data.message);
+                                }
+                                console.log(vm.editArticleForm);
+                            }).catch(function (error) {
+                                console.log(error);
+
+                            })
+
+                        } else {
+                            console.log('保存发生错误!!');
+                            return false;
+                        }
+                    });
+                }
+                ,
+
+                handleSizeChange(val) {
+                    this.pagesize = val;
+                    this.loadArticles();
+                    console.log(`每页 ${val} 条`);
+                }
+                ,
+
+                handleCurrentChange(val) {
+                    this.currentpage = val;
+                    this.loadArticles();
+                    console.log(`当前页: ${val}`);
+                }
+                ,
+
+                filterArticle: function () {
+                    this.currentpage = 1;
+                    this.loadArticles();
+                }
+                ,
+
+                resetFilter: function () {
+                    this.filter.ArticleTitle = '';
+                    this.filter.CategoryName = '';
+                    this.filter.ArticleTags = '';
+                    this.loadArticles();
+                }
+                ,
+
+                goBackArticleList: function (val) {
+                    if (val == 'addformshow') {
+                        vm.addformshow = false;
+                    } else if (val == 'editformshow') {
+                        vm.editformshow = false;
+                    }
+                    vm.articlelistshow = true;
+                    vm.loadArticles();
+                }
+                ,
+
+                openAddForm: function () {
+                    vm.resetaddArticleForm();
+                    vm.articlelistshow = false;
+                    vm.addformshow = true;
+                }
+                ,
+
+
+                openEditForm: function (val) {
+                    vm.GetEditArticle(val);
+                    vm.articlelistshow = false;
+                    vm.editformshow = true;
+                }
+                ,
+
+
+                addNewArticle: function () {
+                    this.$refs["addArticleForm"].validate((valid) => {
+                        if (valid) {
+                            axios({
+                                url: "{% url 'admin:add_blog' %}",
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Access-Control-Allow-Origin": "*",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                data: vm.addArticleForm,
+                            }).then(function (response) {
+                                if ('success' === response.data.success) {
+                                    vm.$message.success(response.data.message)
+                                    vm.addformshow = false;
+                                    vm.loadArticles();
+                                    vm.articlelistshow = true;
+                                    vm.resetaddArticleForm();
+                                    console.log(response.data.data);
+                                } else {
+                                    vm.$message.error(response.data.message);
+                                }
+                            }).catch(function (error) {
+                                console.log(error);
+                            });
+                        } else {
+                            console.log('提交发生错误!!');
+                            return false;
+                        }
+                    });
+                }
+                ,
+
+
+                loadPictures: function () {
+                    vm.loading_pictures = true;
+                    axios({
+                        url: "{% url 'admin:get_pictures_this_type' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {cate: vm.pictureSelectCate},
+                    }).then(function (response) {
+                        vm.Pictures = response.data.Pictures;
+                        vm.loading_pictures = false;
+                    }).catch(function (error) {
+                        console.log(error);
+                    })
+                }
+                ,
+
+                resetaddArticleForm: function () {
+                    this.$refs['addArticleForm'].resetFields();
+                    tinymce.get('tinymce-add').setContent("请输入文章内容");
+                    vm.addArticleForm.Category = '';
+                }
+                ,
+
+                reseteditArticleForm: function () {
+                    vm.GetEditArticle(vm.editArticleForm);
+                    tinymce.get('tinymce-edit').setContent(vm.editArticleForm.ArticleContent);
+                }
+                ,
+
+                deleteArticlePre: function (val) {
+                    vm.deleteQueryVisible = true;
+                    vm.deleteCourse = val;
+                }
+                ,
+
+                deleteOneArticle(val) {
+                    axios({
+                        url: "{% url 'admin:delete_blog' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {'id': val.id},
+                    })
+                    // withCredentials: true,
+                        .then(function (response) {
+                            if (response.data.success === 'success') {
+                                vm.$message.success(response.data.msg);
+                                vm.deleteQueryVisible = false;
+                                vm.loadArticles();
+                            } else {
+                                vm.$message.error(response.data.msg);
+                            }
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                }
+                ,
+
+
+                deleteAllSelected: function () {
+                    axios({
+                        url: "{% url 'admin:delete_selected_blog' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: this.multipleSelection,
+                    })
+                    // withCredentials: true,
+                        .then(function (response) {
+                            if (response.data.success === 'success') {
+                                vm.$message.success(response.data.msg);
+                                vm.deleteAllQueryVisible = false;
+                                vm.loadArticles();
+                            } else {
+                                vm.$message.error(response.data.msg);
+                            }
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                }
+                ,
+
+
+                deleteAllSelectedPre: function () {
+                    if (((this.multipleSelection) === undefined || (this.multipleSelection).length <= 0)) {
+                        this.$message.error("请先选中要删除的对象！")
+                    } else {
+                        vm.deleteAllQueryVisible = true;
+                    }
+                }
+                ,
+
+                setAddContent: function () {
+                    vm.addArticleForm.ArticleContent = tinymce.get('tinymce-add').getContent();
+                },
+
+                setEditContent: function () {
+                    vm.editArticleForm.ArticleContent = tinymce.get('tinymce-edit').getContent();
+                }
+            }
+            ,
+
+        })
+    </script>
+{% endblock %}

@@ -1,0 +1,584 @@
+{% extends 'PC/admin/base.html' %}
+{% load static %}
+{% block title %}课程分类列表{% endblock %}
+{% block css %}
+
+{% endblock %}
+{% block content %}
+    <div class="content">
+        <div class="container-fluid">
+
+            <!-- Page title box -->
+            <div class="page-title-box">
+                <ol class="breadcrumb float-right">
+                    <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="javascript:void(0);">课程管理</a></li>
+                    <li class="breadcrumb-item active">分类管理</li>
+                </ol>
+                <h4 class="page-title">分类列表</h4>
+            </div>
+            <!-- End page title box -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card-box">
+                        <!-- 此区域禁用jinjia模板语言-->
+                        {% verbatim myblock %}
+
+                            <div id="category_list" v-cloak>
+                                <el-row>
+                                    <el-form :inline="true" :model="filter" size="small">
+                                        <el-form-item label="分类名称">
+                                            <el-input v-model="filter.CategoryName" placeholder="输入分类名称关键字"
+                                                      :width="50"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="父分类名称">
+                                            <el-input v-model="filter.ParentCategory" placeholder="输入上级分类名称关键字"
+                                                      :width="50"></el-input>
+                                        </el-form-item>
+                                        <el-button type="primary" round size="small" @click="filterCategory">搜索
+                                        </el-button>
+                                        <el-button type="info" round size="small"
+                                                   @click="resetFilter()">
+                                            重置
+                                        </el-button>
+                                    </el-form>
+                                </el-row>
+                                <el-table v-loading="loading"
+                                          element-loading-text="加载中"
+                                          element-loading-spinner="el-icon-loading"
+                                          :stripe=true
+                                          @sort-change="sortChange"
+                                          ref="multipleTable"
+                                          :data="category_list"
+                                          tooltip-effect="dark"
+                                          style="width: 100%;"
+                                          :cell-style="cell_style"
+                                          @selection-change="handleSelectionChange">
+                                    <el-table-column
+                                            type="selection"
+                                            min-width="55">
+                                    </el-table-column>
+                                    <el-table-column
+                                            fixed="left"
+                                            prop="id"
+                                            label="ID编号"
+                                            min-width="120"
+                                            sortable
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column
+                                            fixed="left"
+                                            prop="CategoryName"
+                                            label="分类名称"
+                                            min-width="220">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="ParentCategory.CategoryName"
+                                            label="父类名称"
+                                            min-width="220"
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column prop="CateLevel"
+                                                     label="分类层级"
+                                                     min-width="120">
+                                    </el-table-column>
+                                    <el-table-column
+                                            sortable
+                                            prop="Slug"
+                                            label="标识"
+                                            min-width="250"
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="AddDate_Time"
+                                            label="添加时间"
+                                            sortable
+                                            min-width="240"
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="UpDate_Time"
+                                            label="更新时间"
+                                            sortable
+                                            min-width="240"
+                                            show-overflow-tooltip>
+                                    </el-table-column>
+                                    <el-table-column></el-table-column>
+                                    <el-table-column
+                                            fixed="right"
+                                            label="操作"
+                                            min-width="200">
+                                        <template slot-scope="scope">
+                                            <el-button type="primary" icon="el-icon-edit" circle
+                                                       size="mini" @click="openEditCategoryForm(scope.row)"></el-button>
+                                            <el-button @click="deleteCategoryPre(scope.row)" type="danger"
+                                                       icon="el-icon-delete" circle
+                                                       size="mini">
+                                            </el-button>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+
+                                <el-row>
+                                    <el-col :span="6">
+                                        <div class="grid-content bg-purple">
+                                            <div style="margin-top: 10px;">
+                                                <el-button type="primary" @click="openAddCategoryForm" round
+                                                           size="small">新增分类
+                                                </el-button>
+                                                <el-button type="danger" @click="deleteAllSelectedPre" round
+                                                           size="small">删除选中
+                                                </el-button>
+                                                <el-button type="info" @click="toggleSelection()" round size="small">
+                                                    取消选中
+                                                </el-button>
+                                            </div>
+                                        </div>
+                                    </el-col>
+                                    <el-col :span="10" :offset="2">
+                                        <div class="grid-content bg-purple-light">
+                                            <el-pagination
+                                                    @size-change="handleSizeChange"
+                                                    @current-change="handleCurrentChange"
+                                                    :current-page="currentpage"
+                                                    :page-sizes="[15, 25, 50, 100]"
+                                                    :page-size="pagesize"
+                                                    layout="total, sizes, prev, pager, next, jumper"
+                                                    :total="total"
+                                                    background
+                                                    style="margin-top: 10px;">
+                                            </el-pagination>
+                                        </div>
+                                    </el-col>
+                                </el-row>
+
+                                <el-dialog title="编辑分类"
+                                           :visible.sync="editDialogVisible"
+                                           width="40%">
+                                    <el-form v-model="editCategoryMod" :label-position="labelPosition"
+                                             :label-width="formLabelWidth">
+                                        <el-form-item label="ID编号" height="100">
+                                            <el-input :value="editCategoryMod.id" :disabled="true"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="分类名称" height="100">
+                                            <el-input :value="editCategoryMod.CategoryName"
+                                                      v-model="editCategoryMod.CategoryName"
+                                                      :disabled="false" placeholder="请输入分类名称 (必填)"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="父分类名称" :label-width="formLabelWidth">
+                                            <el-cascader v-model="editCategoryMod.ParentCategory"
+                                                         :props="{ checkStrictly: true }"
+                                                         :options="allCategory"
+                                                         :placeholder="editCategoryMod.ParentCateLabel"
+                                                         style="width: 100%;" clearable filterable></el-cascader>
+                                        </el-form-item>
+                                        <el-form-item label="标识" height="100">
+                                            <el-input :value="editCategoryMod.Slug" :disabled="true"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="添加时间" height="100">
+                                            <el-input :value="editCategoryMod.AddDate_Time" :disabled="true"></el-input>
+                                        </el-form-item>
+                                        </el-form-item>
+                                        <el-form-item label="更新时间" height="100">
+                                            <el-input :value="editCategoryMod.UpDate_Time" :disabled="true"></el-input>
+                                        </el-form-item>
+                                    </el-form>
+                                    <span slot="footer" class="dialog-footer">
+                                        <el-button type="danger" @click="editDialogVisible=false" round
+                                                   size="small">取消</el-button>
+                                        <el-button type="primary" @click="editCategory" round
+                                                   size="small">保存</el-button>
+                                    </span>
+                                </el-dialog>
+
+
+                                <el-dialog title="增加分类" :visible.sync="addDialogFormVisible">
+                                    <el-form :model="addCategoryForm" :label-position="labelPosition"
+                                             :label-width="formLabelWidth">
+                                        <el-form-item label="分类名称">
+                                            <el-input v-model="addCategoryForm.CategoryName" autocomplete="off"
+                                                      placeholder="请输入分类名称 (必填)"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="父分类名称" :label-width="formLabelWidth">
+                                            <el-cascader v-model="addCategoryForm.ParentCategory"
+                                                         :props="{ checkStrictly: true }"
+                                                         :options="allCategory"
+                                                         placeholder="请选择父分类"
+                                                         style="width: 100%;" clearable filterable></el-cascader>
+                                        </el-form-item>
+                                    </el-form>
+                                    <div slot="footer" class="dialog-footer">
+                                        <el-button @click="addDialogFormVisible = false" round size="small">取 消
+                                        </el-button>
+                                        <el-button type="primary" @click="addNewCategory()" round size="small">确 定
+                                        </el-button>
+                                    </div>
+                                </el-dialog>
+
+                                <el-dialog
+                                        title="提示"
+                                        v-model="deleteCategory"
+                                        :visible.sync="deleteQueryVisible"
+                                        width="30%"
+                                        center>
+                                    <span>确定删除这个分类吗？</span>
+                                    <span slot="footer" class="dialog-footer">
+                                        <el-button @click="deleteQueryVisible = false" type="info" round size="small">取 消</el-button>
+                                        <el-button type="primary"
+                                                   @click="deleteSelection(deleteCategory)" round
+                                                   size="small">确 定</el-button>
+                                    </span>
+                                </el-dialog>
+
+                                <el-dialog
+                                        title="提示"
+                                        v-model="deleteAllSelected"
+                                        :visible.sync="deleteAllQueryVisible"
+                                        width="30%"
+                                        center>
+                                    <span>确定删除选中分类吗？</span>
+                                    <span slot="footer" class="dialog-footer">
+                                        <el-button @click="deleteAllQueryVisible = false" type="info" round
+                                                   size="small">取 消</el-button>
+                                        <el-button type="primary"
+                                                   @click="deleteAllSelected()" round
+                                                   size="small">确定删除</el-button>
+                                    </span>
+                                </el-dialog>
+                            </div>
+
+                        {% endverbatim myblock %}
+                    </div>
+                </div>
+            </div> <!-- end row -->
+        </div> <!-- end container-fluid-->
+    </div> <!-- end contant-->
+{% endblock %}
+{% block javascript %}
+
+    <script>
+        var vm = new Vue({
+            el: '#category_list',
+            data: {
+                category_list: [],
+                multipleSelection: [],
+                pagesize: 15, // 每页数量
+                currentpage: 1,
+                total: 0,
+                cell_style: {
+                    padding: 5,
+                },
+                filter: {
+                    CategoryName: '',
+                    ParentCategory: ''
+                },
+                sort: {
+                    column_name: '',
+                    sort_type: null,
+                },
+                addDialogFormVisible: false,
+                addCategoryForm: {
+                    CategoryName: '',
+                    ParentCategory: '',
+                },
+                deleteAllQueryVisible: false,
+                deleteCategory: {},
+                deleteQueryVisible: false,
+                editCategoryMod: {},
+                editDialogVisible: false,
+                allCategory: [],
+                formLabelWidth: '120px',
+                labelPosition: 'left',
+                loading: true,
+            },
+
+            created: function () {
+                this.loadCategory();
+            },
+
+            methods: {
+                toggleSelection(rows) {
+                    if (rows) {
+                        rows.forEach(row => {
+                            this.$refs.multipleTable.toggleRowSelection(row);
+                        });
+                    } else {
+                        this.$refs.multipleTable.clearSelection();
+                    }
+                },
+
+                handleSelectionChange(val) {
+                    this.multipleSelection = val;
+                    console.log(this.multipleSelection);
+                },
+
+                sortChange(column, prop, order) {
+
+                    //点击排序按钮后拿到column.order，可以发送column.order给后台，后台再根据什么排序来返回排序过后的数据
+                    console.log(column + '---' + column.prop + '---' + column.order);
+                    this.sort = {column_name: column.prop, sort_type: column.order};
+                    this.currentpage = 1;
+                    this.loadCategory();
+                    //输出的结果 [object Object]---name---ascending
+
+                },
+
+                loadCategory: function () {
+                    console.log(this.currentpage);
+                    console.log(this.pagesize);
+                    axios({
+                        url: "{% url 'admin:get_category' %}",
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        // withCredentials: true,
+                        params: {
+                            current_page: this.currentpage,
+                            page_size: this.pagesize,
+                            column_name: this.sort.column_name,
+                            sort_type: this.sort.sort_type,
+                            filter: this.filter,
+                        },
+                    })
+                        .then(function (response) {
+                            vm.category_list = response.data.pageData;
+                            console.log(vm.category_list);
+                            if (((vm.category_list) == undefined || (vm.category_list).length <= 0) && vm.currentpage > 1) {
+                                vm.currentpage = vm.currentpage - 1;
+                                vm.loadCategory();
+                            } else {
+                                vm.loading = false;
+                            }
+                            vm.total = response.data.total;
+                            console.log(response.data);
+                        }).catch(function (error) {
+                        console.log(error);
+                    });
+                },
+
+                handleSizeChange(val) {
+                    this.pagesize = val;
+                    this.loadCategory();
+                    console.log(`每页 ${val} 条`);
+                },
+
+                handleCurrentChange(val) {
+                    this.currentpage = val;
+                    this.loadCategory();
+                    console.log(`当前页: ${val}`);
+                },
+
+                filterCategory: function () {
+                    this.currentpage = 1;
+                    this.loadCategory();
+                },
+
+                resetFilter: function () {
+                    this.filter.CategoryName = '';
+                    this.filter.ParentCategory = '';
+                    this.loadCategory();
+                },
+
+                addNewCategory: function () {
+                    axios({
+                        url: "{% url 'admin:add_category' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        // withCredentials: true,
+                        data: vm.addCategoryForm
+                    }).then(response => {
+                        if (response.data.success == 'success') {
+                            //添加元素
+                            this.loadCategory();
+                            //显示提示
+                            vm.$message.success(response.data.msg);
+                            //关闭对话框表单
+                            vm.addDialogFormVisible = false;
+                            //清空表单里面的赋值
+                            vm.addCategoryForm.CategoryName = '';
+                            vm.addCategoryForm.ParentCategory = '';
+                        } else {
+                            vm.$message.error(response.data.msg);
+                        }
+
+                        console.log(response);
+                    }).catch(err => {
+                        console.log(err);
+                    })
+                },
+
+                openAddCategoryForm: function () {
+                    vm.addDialogFormVisible = true;
+                    axios.get("{% url 'admin:get_all_category' %}")
+                        .then(function (response) {
+                            vm.allCategory = response.data.allcategory;
+                            console.log(response.data);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                },
+
+                editCategory: function () {
+                    axios({
+                        url: "{% url 'admin:edit_category' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        // withCredentials: true,
+                        data: vm.editCategoryMod
+                    }).then(response => {
+                        if (response.data.success == 'success') {
+                            //更新元素
+                            this.loadCategory();
+                            //显示提示
+                            vm.$message.success(response.data.msg);
+                            //关闭对话框表单
+                            vm.editDialogVisible = false;
+                            //清空表单里面的赋值
+                            vm.addCategoryForm.CategoryName = '';
+                            vm.addCategoryForm.ParentCategory = '';
+                        } else {
+                            vm.$message.error(response.data.msg);
+                        }
+
+                        console.log(response);
+                    }).catch(err => {
+                        console.log(err);
+                    })
+                },
+
+                openEditCategoryForm: function (val) {
+                    console.log(val);
+                    axios({
+                        url: "{% url 'admin:edit_category' %}",
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        params: val,
+                        // withCredentials: true,
+                    }).then(response => {
+                        if (response.data.success == 'success') {
+                            //通过id查询元素
+                            vm.editCategoryMod = response.data.resp_category;
+                            vm.editDialogVisible = true;
+                            console.log(response);
+                            axios({
+                                url: "{% url 'admin:get_all_category' %}",
+                                method: "GET",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Access-Control-Allow-Origin": "*",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                            })
+                                .then(function (response) {
+                                    vm.allCategory = response.data.allcategory;
+                                    console.log(response.data);
+                                })
+                                .catch(function (error) {
+                                    console.log(error);
+                                });
+
+                        } else {
+                            vm.$message.error(response.data.msg);
+                        }
+
+                        console.log(response);
+                    }).catch(err => {
+                        console.log(err);
+                    })
+                },
+
+
+                deleteAllSelected: function () {
+                    axios({
+                        url: "{% url 'admin:delete_selected_category' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: this.multipleSelection,
+                    })
+                    // withCredentials: true,
+                        .then(function (response) {
+                            if (response.data.success == 'success') {
+                                vm.$message.success(response.data.msg);
+                                vm.deleteAllQueryVisible = false;
+                                vm.loadCategory();
+                            } else {
+                                vm.$message.error(response.data.msg);
+                            }
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                },
+
+
+                deleteAllSelectedPre: function () {
+                    if (((this.multipleSelection) == undefined || (this.multipleSelection).length <= 0)) {
+                        this.$message.error("请先选中要删除的对象！")
+                    } else {
+                        vm.deleteAllQueryVisible = true;
+                    }
+                },
+
+
+                deleteCategoryPre: function (val) {
+                    vm.deleteQueryVisible = true;
+                    vm.deleteCategory = val;
+                },
+
+                deleteSelection: function (val) {
+                    console.log(val);
+                    axios({
+                        url: "{% url 'admin:delete_category' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        // withCredentials: true,
+                        data: val,
+                    }).then(response => {
+                        if (response.data.success == 'success') {
+                            //通过id删除元素
+                            vm.category_list.splice(vm.category_list.indexOf(val), 1);
+                            vm.deleteQueryVisible = false;
+                            vm.deleteCategoryId = 0;
+                            this.loadCategory();
+                            vm.$message.success(response.data.msg);
+                        } else {
+                            vm.$message.error(response.data.msg);
+                        }
+
+                        console.log(response);
+                    }).catch(err => {
+                        console.log(err);
+                    })
+                },
+            },
+
+        })
+    </script>
+{% endblock %}

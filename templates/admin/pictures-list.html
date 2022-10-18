@@ -1,0 +1,747 @@
+{% extends 'PC/admin/base.html' %}
+{% load static %}
+{% block title %}图片列表{% endblock %}
+{% block css %}
+
+{% endblock %}
+{% block content %}
+    <div class="content">
+        <div class="container-fluid">
+
+            <!-- Page title box -->
+            <div class="page-title-box">
+                <ol class="breadcrumb float-right">
+                    <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'admin:upload_pictures' %}">图片上传</a></li>
+                    <li class="breadcrumb-item active">图片列表</li>
+                </ol>
+                <h4 class="page-title">图片列表</h4>
+            </div>
+            <!-- End page title box -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card-box">
+                        <!-- 此区域禁用jinjia模板语言-->
+                        {% verbatim myblock %}
+                            <div id="courses" v-cloak>
+                                <div id="pictures_list" v-show="pictureslistshow">
+                                    <el-row>
+                                        <el-form :inline="true" :model="filter" size="small">
+                                            <el-form-item label="图片名称">
+                                                <el-input v-model="filter.ImageTitle" placeholder="输入图片名称关键字"
+                                                          :width="50"></el-input>
+                                            </el-form-item>
+                                            <el-form-item label="图片分类">
+                                                <el-input v-model="filter.ImageCateName" placeholder="输入图片分类名称关键字"
+                                                          :width="50"></el-input>
+                                            </el-form-item>
+                                            <el-form-item label="图片标签">
+                                                <el-input v-model="filter.ImageTags" placeholder="输入图片标签关键字"
+                                                          :width="50"></el-input>
+                                            </el-form-item>
+                                            <el-button type="primary" round size="small" @click="filterPictures">搜索
+                                            </el-button>
+                                            <el-button type="info" round size="small"
+                                                       @click="resetFilter()">
+                                                重置
+                                            </el-button>
+                                            <el-button type="warning" round size="small"
+                                                       @click="handleSetSelectCate()">
+                                                设置图片分类
+                                            </el-button>
+                                        </el-form>
+                                    </el-row>
+                                    <el-table v-loading="loading"
+                                              element-loading-text="加载中"
+                                              element-loading-spinner="el-icon-loading"
+                                              @sort-change="sortChange"
+                                              ref="multipleTable"
+                                              :data="pictures_list"
+                                              tooltip-effect="dark"
+                                              style="width: 100%;"
+                                              :cell-style="cell_style"
+                                              @selection-change="handleSelectionChange">
+                                        <el-table-column
+                                                type="selection"
+                                                min-width="55">
+                                        </el-table-column>
+                                        <el-table-column
+                                                fixed="left"
+                                                prop="id"
+                                                label="ID编号"
+                                                min-width="120"
+                                                sortable
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                fixed="left"
+                                                label='图片略缩图'
+                                                min-width="120">
+                                            <template slot-scope="scope">
+                                                <el-popover
+                                                        placement="right"
+                                                        title=""
+                                                        trigger="hover">
+                                                    <el-image slot="reference" :src="scope.row.ImageTumb"
+                                                              :alt="scope.row.ImageTumb">
+                                                    </el-image>
+                                                    <el-image :src="scope.row.ImageBigTumb"></el-image>
+                                                </el-popover>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                fixed="left"
+                                                prop="ImageTitle"
+                                                label="图片名称"
+                                                min-width="220">
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="ImageId"
+                                                label="图片外部编号"
+                                                min-width="320"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="ImageDescription"
+                                                label="简要描述"
+                                                min-width="250"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="ImageCate.ImageCateId"
+                                                label="外部图片分类编号"
+                                                min-width="250"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                sortable
+                                                prop="ImageCate.ImageCateName"
+                                                label="外部图片分类名称"
+                                                min-width="250"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                sortable
+                                                prop="ImageSize"
+                                                label="图片大小"
+                                                min-width="160"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                sortable
+                                                prop="ImageURL"
+                                                label="图片访问地址"
+                                                min-width="700"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="ImageOriginalFileName"
+                                                label="图片下载名称"
+                                                min-width="450"
+                                                show-overflow-tooltip></el-table-column>
+                                        <el-table-column
+                                                label="图片标签"
+                                                min-width="450">
+                                            <template slot-scope="scope">
+                                                <div class="tag-group">
+                                                    <el-tag
+                                                            type="danger"
+                                                            style="margin: 5px;"
+                                                            size="small"
+                                                            v-for="item in scope.row.ImageTags"
+                                                            :key="item">
+                                                        {{ item }}
+                                                    </el-tag>
+                                                </div>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="AddDate_Time"
+                                                label="添加时间"
+                                                sortable
+                                                min-width="240"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column
+                                                prop="UpDate_Time"
+                                                label="更新时间"
+                                                sortable
+                                                min-width="240"
+                                                show-overflow-tooltip>
+                                        </el-table-column>
+                                        <el-table-column></el-table-column>
+                                        <el-table-column
+                                                fixed="right"
+                                                label="操作"
+                                                min-width="120">
+                                            <template slot-scope="scope">
+                                                <!--
+                                                <el-button icon="el-icon-search" circle size="mini"
+                                                           @click="openDetailForm(scope.row)"></el-button>
+                                                           -->
+                                                <el-button type="primary" icon="el-icon-edit" circle
+                                                           size="mini"
+                                                           @click="openEditForm(scope.row)"></el-button>
+                                                <el-button @click="deletePicturesPre(scope.row)" type="danger"
+                                                           icon="el-icon-delete" circle
+                                                           size="mini">
+                                                </el-button>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+
+                                    <el-row>
+                                        <el-col :span="6">
+                                            <div class="grid-content bg-purple">
+                                                <div style="margin-top: 10px;">
+                                                    <!--
+                                                    <el-button type="primary" @click="openUploadPicturesForm()" round
+                                                               size="small">上传图片
+                                                    </el-button>
+                                                    -->
+                                                    <el-button type="danger" @click="deleteAllSelectedPre()"
+                                                               round
+                                                               size="small">删除选中
+                                                    </el-button>
+                                                    <el-button type="info" @click="toggleSelection()" round
+                                                               size="small">
+                                                        取消选中
+                                                    </el-button>
+                                                </div>
+                                            </div>
+                                        </el-col>
+                                        <el-col :span="10" :offset="2">
+                                            <div class="grid-content bg-purple-light">
+                                                <el-pagination
+                                                        @size-change="handleSizeChange"
+                                                        @current-change="handleCurrentChange"
+                                                        :current-page="currentpage"
+                                                        :page-sizes="[15, 25, 50, 100]"
+                                                        :page-size="pagesize"
+                                                        layout="total, sizes, prev, pager, next, jumper"
+                                                        :total="total"
+                                                        background
+                                                        style="margin-top: 10px;">
+                                                </el-pagination>
+                                            </div>
+                                        </el-col>
+                                    </el-row>
+
+
+                                    <el-dialog
+                                            title="提示"
+                                            v-model="deleteCourse"
+                                            :visible.sync="deleteQueryVisible"
+                                            width="30%"
+                                            center>
+                                        <span>确定删除这张图片吗？</span>
+                                        <span slot="footer" class="dialog-footer">
+                                        <el-button @click="deleteQueryVisible = false" type="info" round size="small">取 消</el-button>
+                                        <el-button type="primary"
+                                                   @click="deleteOnePicture(deleteCourse)" round
+                                                   size="small">确 定</el-button>
+                                    </span>
+                                    </el-dialog>
+
+                                    <el-dialog
+                                            title="提示"
+                                            v-model="deleteAllSelected"
+                                            :visible.sync="deleteAllQueryVisible"
+                                            width="30%"
+                                            center>
+                                        <span>确定删除选中图片吗？</span>
+                                        <span slot="footer" class="dialog-footer">
+                                            <el-button @click="deleteAllQueryVisible = false" type="info" round
+                                                       size="small">取 消</el-button>
+                                            <el-button type="primary"
+                                                       @click="deleteAllSelected()" round
+                                                       size="small">确定删除</el-button>
+                                        </span>
+                                    </el-dialog>
+
+                                    <el-dialog title="批量设置图片分类"
+                                               :visible.sync="setSelectCateDialog"
+                                               width="30%"
+                                               center>
+                                        <el-form>
+                                            <el-form-item label="分类">
+                                                <el-cascader v-model="imageMultiCate"
+                                                             :props="{ checkStrictly: true }"
+                                                             :options="pictureCate"
+                                                             placeholder="请选择图片分类"
+                                                             style="width: 100%;" clearable filterable
+                                                             @focus="loadPictureCate()"></el-cascader>
+                                            </el-form-item>
+                                        </el-form>
+                                        <div slot="footer" class="dialog-footer">
+                                            <el-button @click="setSelectCateDialog = false">取 消</el-button>
+                                            <el-button type="primary" @click="setSelectCate()">设置分类</el-button>
+                                        </div>
+                                    </el-dialog>
+                                </div>
+                                <!--
+                                <div id="uploadPicturesForm" v-show="uploadPicturesFormShow">
+                                     <el-page-header :title="headertitle" @back="goBackPicturesList('uploadPicturesFormShow')"
+                                                    content="上传图片">
+                                    </el-page-header>
+                                <div>
+                                -->
+                                <div id="editPictureForm" v-show="editformshow">
+                                    <el-page-header :title="headertitle" @back="goBackPicturesList('editformshow')"
+                                                    content="编辑图片信息">
+                                    </el-page-header>
+                                    <el-row>
+                                        <el-col :span="10">
+                                            <el-form :model="pictureForm" ref="pictureForm"
+                                                     label-width="100px" style="margin-top: 40px">
+                                                <el-form-item label="图片预览">
+                                                    <el-image :src="pictureForm.ImageTumb">
+                                                    </el-image>
+                                                </el-form-item>
+                                                <el-form-item label="图片地址">
+                                                    <span style="width: 100%;">
+                                                     <el-link :href="pictureForm.ImageURL"
+                                                              target="_blank">{{ pictureForm.ImageURL }}</el-link>
+                                                    </span>
+                                                </el-form-item>
+                                                <el-form-item label="图片大小">
+                                                    <span style="width: 100%">{{ pictureForm.ImageSize }}</span>
+                                                </el-form-item>
+                                                <el-form-item label="图片尺寸">
+                                                    <span style="width: 100%">高：{{ pictureForm.ImageHeight }}px，宽：{{ pictureForm.ImageWidth }}px</span>
+                                                </el-form-item>
+                                                <el-form-item label="图片名称" prop="ImageTitle"
+                                                              :rules="[{ required: true, message: '请输入图片名称' }]">
+                                                    <el-input v-model="pictureForm.ImageTitle"
+                                                              placeholder="图片名称"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="图片分类">
+                                                    <el-cascader v-model="pictureForm.ImageCate"
+                                                                 :props="{ checkStrictly: true }"
+                                                                 :options="pictureCate"
+                                                                 :placeholder="pictureForm.ImageCateLabel"
+                                                                 style="width: 100%;" clearable filterable
+                                                                 @focus="loadPictureCate()"></el-cascader>
+                                                </el-form-item>
+                                                <el-form-item label="图片描述">
+                                                    <el-input placeholder="请输入图片描述" type="textarea"
+                                                              v-model="pictureForm.ImageDescription"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="图片标签">
+                                                    <template>
+                                                        <el-select
+                                                                v-model="pictureForm.ImageTags"
+                                                                value-key="id"
+                                                                multiple
+                                                                filterable
+                                                                allow-create
+                                                                default-first-option
+                                                                style="width: 100%;"
+                                                                placeholder="请输入图片标签，按回车键">
+                                                            <el-option
+                                                                    v-for="item in pictureForm.ImageTags"
+                                                                    :key="item.id"
+                                                                    :label="item"
+                                                                    :value="item">
+                                                            </el-option>
+                                                        </el-select>
+                                                    </template>
+                                                </el-form-item>
+
+                                                <el-form-item>
+                                                    <el-button type="primary" @click="submitForm('pictureForm')">保存编辑
+                                                    </el-button>
+                                                    <el-button @click="resetForm('pictureForm')">重置</el-button>
+                                                </el-form-item>
+                                            </el-form>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+                            </div>
+                        {% endverbatim myblock %}
+                    </div>
+                </div>
+            </div> <!-- end row -->
+        </div> <!-- end container-fluid-->
+    </div> <!-- end contant-->
+{% endblock %}
+{% block javascript %}
+
+
+    <script>
+        var vm = new Vue({
+            el: '#courses',
+            data: {
+                pictureslistshow: true,
+                uploadPicturesFormShow: false,
+                editformshow: false,
+                detailformshow: false,
+                headertitle: "返回图片列表",
+                pictures_list: [],
+                multipleSelection: [],
+                pagesize: 15, // 每页数量
+                currentpage: 1,
+                total: 0,
+                filter: {
+                    ImageTitle: '',
+                    ImageCateName: '',
+                    ImageTags: '',
+                },
+                sort: {
+                    column_name: '',
+                    sort_type: null,
+                },
+                uploadPicturesForm: {
+                    CourseName: '',
+                    CategoryName: '',
+                },
+                uploaddialogImageUrl: '',
+                uploadimagedialogVisible: false,
+                fileList: [],
+                deleteAllQueryVisible: false,
+                deleteCourse: {},
+                deleteQueryVisible: false,
+                detailCourseForm: {},
+                allCategory: [],
+                formLabelWidth: '120px',
+                labelPosition: 'left',
+                cell_style: {
+                    padding: 5,
+                },
+                pictureCate: [],
+                pictureForm: {
+                    id: null,
+                    ImageId: '',
+                    ImageTags: [],
+                    ImageCate: '',
+                    ImageTitle: '',
+                    ImageDescription: '',
+                    ImageURL: '',
+                    ImageSize: '',
+                    ImageHeight: '',
+                    ImageWidth: '',
+                    ImageTumb: '',
+                },
+                setSelectCateDialog: false,
+                imageMultiCate: '',
+                loading: true,
+            },
+
+            created: function () {
+                this.loadPictures();
+            },
+
+            methods: {
+                toggleSelection(rows) {
+                    if (rows) {
+                        rows.forEach(row => {
+                            this.$refs.multipleTable.toggleRowSelection(row);
+                        });
+                    } else {
+                        this.$refs.multipleTable.clearSelection();
+                    }
+                },
+
+                handleSelectionChange(val) {
+                    this.multipleSelection = val;
+                    console.log(this.multipleSelection);
+                },
+
+                sortChange(column, prop, order) {
+
+                    //点击排序按钮后拿到column.order，可以发送column.order给后台，后台再根据什么排序来返回排序过后的数据
+                    console.log(column + '---' + column.prop + '---' + column.order);
+                    this.sort = {column_name: column.prop, sort_type: column.order};
+                    this.currentpage = 1;
+                    this.loadPictures();
+                    //输出的结果 [object Object]---name---ascending
+
+                },
+
+                loadPictures: function () {
+                    console.log(this.currentpage);
+                    console.log(this.pagesize);
+                    axios({
+                        url: "{% url 'admin:list_pictures' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        // withCredentials: true,
+                        data: {
+                            current_page: this.currentpage,
+                            page_size: this.pagesize,
+                            column_name: this.sort.column_name,
+                            sort_type: this.sort.sort_type,
+                            filter: this.filter,
+                        },
+                    })
+                        .then(function (response) {
+                            console.log(vm.pictures_list);
+                            vm.pictures_list = response.data.pageData;
+                            if (((vm.pictures_list) == undefined || (vm.pictures_list).length <= 0) && vm.currentpage > 1) {
+                                vm.currentpage = vm.currentpage - 1;
+                                vm.loadPictures();
+                            } else {
+                                vm.loading = false;
+                            }
+                            vm.total = response.data.total;
+                            console.log(response.data);
+                        }).catch(function (error) {
+                        console.log(error);
+                    });
+                },
+
+                loadPictureCate: function () {
+                    axios({
+                        url: "{% url 'admin:get_picture_cate' %}",
+                        method: 'GET',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                    }).then(function (response) {
+                        vm.pictureCate = response.data.resp_picture_cate;
+                    })
+                },
+
+                handleSizeChange(val) {
+                    this.pagesize = val;
+                    this.loadPictures();
+                    console.log(`每页 ${val} 条`);
+                },
+
+                handleCurrentChange(val) {
+                    this.currentpage = val;
+                    this.loadPictures();
+                    console.log(`当前页: ${val}`);
+                },
+
+                filterPictures: function () {
+                    this.currentpage = 1;
+                    this.loadPictures();
+                },
+
+                resetFilter: function () {
+                    this.filter.ImageTitle = '';
+                    this.filter.ImageCateName = '';
+                    this.filter.ImageTags = '';
+                    this.loadPictures();
+                },
+
+                handleSetSelectCate: function () {
+                    if (((this.multipleSelection) == undefined || (this.multipleSelection).length <= 0)) {
+                        this.$message.error("请先选中要设置分类的图片！");
+                    } else {
+                        this.setSelectCateDialog = true;
+                    }
+                },
+
+                setSelectCate: function () {
+                    axios({
+                        url: "{% url 'admin:set_pictures_cate' %}",
+                        method: 'POST',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {images: this.multipleSelection, cate: this.imageMultiCate},
+                    }).then(function (data) {
+                        if ('success' == data.data.success) {
+                            vm.$message.success("批量设置图片分类成功！");
+                            vm.setSelectCateDialog = false;
+                            vm.imageMultiCate = "";
+                            vm.loadPictures();
+                        } else {
+                            vm.$message.error("批量设置图片分类失败！")
+                        }
+                    }).catch(function (error) {
+                        console.log(error);
+                    })
+                },
+
+                goBackPicturesList: function (val) {
+                    if (val == 'uploadPicturesFormShow') {
+                        vm.uploadPicturesFormShow = false;
+                    } else if (val == 'editformshow') {
+                        vm.editformshow = false;
+                    } else if (val == 'detailformshow') {
+                        vm.detailformshow = false;
+                    }
+                    vm.loadPictures();
+                    vm.pictureslistshow = true;
+                },
+
+
+                openUploadPicturesForm: function () {
+                    vm.uploadPicturesFormShow = true;
+                    vm.pictureslistshow = false;
+                },
+
+
+                setPicture: function (response_data) {
+                    vm.pictureForm = response_data.data.data;
+                },
+
+                openEditForm: function (val) {
+                    axios({
+                        url: "{% url 'admin:edit_pictures' %}",
+                        method: 'GET',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        params: val,
+                    }).then(function (response) {
+                        if (response.data.success == 'success') {
+                            console.log(response);
+                            vm.setPicture(response);
+                            vm.pictureslistshow = false;
+                            vm.editformshow = true;
+                        } else {
+                            vm.message('加载图片详情失败！');
+                        }
+
+                    })
+                },
+
+                deletePicturesPre: function (val) {
+                    vm.deleteQueryVisible = true;
+                    vm.deleteCourse = val;
+                },
+
+                deleteOnePicture(val) {
+                    axios({
+                        url: "{% url 'admin:delete_pictures' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {'deleteitems': [val]},
+                    })
+                    // withCredentials: true,
+                        .then(function (response) {
+                            if (response.data.success == 'success') {
+                                vm.$message.success(response.data.msg);
+                                vm.deleteQueryVisible = false;
+                                vm.loadPictures();
+                            } else {
+                                vm.$message.error(response.data.msg);
+                            }
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                },
+
+
+                deleteAllSelected: function () {
+                    axios({
+                        url: "{% url 'admin:delete_pictures' %}",
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {'deleteitems': this.multipleSelection},
+                    })
+                    // withCredentials: true,
+                        .then(function (response) {
+                            if (response.data.success == 'success') {
+                                vm.$message.success(response.data.msg);
+                                vm.deleteAllQueryVisible = false;
+                                vm.loadPictures();
+                            } else {
+                                vm.$message.error(response.data.msg);
+                            }
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                },
+
+
+                deleteAllSelectedPre: function () {
+                    if (((this.multipleSelection) == undefined || (this.multipleSelection).length <= 0)) {
+                        this.$message.error("请先选中要删除的图片！");
+                    } else if ((this.multipleSelection).length > 15) {
+                        this.$message.error("一次删除图片不能大于15张！");
+                    } else {
+                        vm.deleteAllQueryVisible = true;
+                    }
+                },
+
+                handleRemove(file, fileList) {
+                    console.log(file, fileList);
+                },
+
+
+                submitForm(formName) {
+                    this.$refs[formName].validate((valid) => {
+                        if (valid) {
+                            axios({
+                                url: '{% url 'admin:edit_pictures' %}',
+                                method: 'POST',
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Access-Control-Allow-Origin": "*",
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                data: vm.pictureForm,
+                            }).then(function (response) {
+                                if ('success' == response.data.success) {
+                                    vm.setPicture(response);
+                                    vm.$message.success(response.data.msg);
+                                    console.log(response.data.data);
+                                } else {
+                                    vm.$message.error(response.data.msg);
+                                }
+                            }).catch(function (error) {
+                                console.log(error);
+                            });
+                        } else {
+                            console.log('error submit!!');
+                            return false;
+                        }
+                    });
+                },
+
+                resetForm() {
+                    axios({
+                        url: "{% url 'admin:edit_pictures' %}",
+                        method: 'GET',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Origin": "*",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        params: {id: vm.pictureForm.id},
+                    }).then(function (response) {
+                        if (response.data.success == 'success') {
+                            console.log(response);
+                            vm.setPicture(response);
+                            vm.$message.success("图片信息编辑已重置！")
+                        } else {
+                            vm.$message.error('图片信息重置失败！');
+                        }
+
+                    })
+                },
+            },
+
+        })
+    </script>
+{% endblock %}

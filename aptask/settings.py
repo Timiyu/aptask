@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users',
-    'website',
+    'admin',
     'schedule',
     'utils',
     'django_apscheduler',
