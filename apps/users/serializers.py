@@ -1,8 +1,8 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from apps.users.models import AdminUser
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = AdminUser
         fields = ['id', 'username', 'first_name', 'last_name', 'date_joined', 'last_login']
