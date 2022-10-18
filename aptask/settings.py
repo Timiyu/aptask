@@ -47,9 +47,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'users',
     'admin',
-    'schedule',
     'utils',
     'django_apscheduler',
 ]
@@ -83,6 +83,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'aptask.wsgi.application'
+ASGI_APPLICATION = 'aptask.wsgi.application'
 
 
 # Database
