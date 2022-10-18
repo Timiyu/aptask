@@ -48,7 +48,7 @@
                 userLogin: function () {
                     let crypto_password = ps_encrypt(this.user.password, "{{ public_key|safe }}");
                     axios({
-                        url: "{% url 'users:login' %}",
+                        url: "{% url 'users:user_login' %}",
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -89,7 +89,7 @@
                 },
 
                 userRegister:function (){
-                    window.location.href = "{% url 'users:register' %}";
+                    window.location.href = "{% url 'users:user_register' %}";
                 }
             }
         })

@@ -119,7 +119,7 @@
 
                         let crypto_password = ps_encrypt(this.user.password, "{{ public_key|safe }}");
                         axios({
-                            url: "{% url 'users:register' %}",
+                            url: "{% url 'users:user_register' %}",
                             method: 'POST',
                             headers: {
                                 "Content-Type": "application/json",
@@ -133,7 +133,7 @@
                             }
                         }).then(response => {
                             if (response.data.code === 'success') {
-                                window.location.href = "{% url 'users:login' %}";
+                                window.location.href = "{% url 'users:user_login' %}";
                             } else {
                                 this.$notify({
                                     title: '警告',
@@ -156,7 +156,7 @@
                 })
             },
             userLogin: function () {
-                window.location.href = "{% url 'users:login' %}";
+                window.location.href = "{% url 'users:user_login' %}";
             },
             send_email_code: function (email) {
                 axios({
