@@ -14,15 +14,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib.staticfiles.views import serve
-from django.urls import path,include,re_path
+from django.urls import path, include, re_path
 from aptask import settings
 
+
 def return_static(request, path, insecure=True, **kwargs):
-  return serve(request, path, insecure, **kwargs)
+    return serve(request, path, insecure, **kwargs)
+
 
 urlpatterns = [
-    path('users/',include('users.urls')),
+    path('users/', include('users.urls')),
     path('', include('admin.urls')),
-    re_path(r'^static/(?P<path>.*)$', return_static, name='static'),
-    re_path(r'^media/(?P<path>.*)$' , serve, { 'document_root' : settings.MEDIA_ROOT}),
 ]
+
+if settings.DEBUG:
+    urlpatterns = urlpatterns + [re_path(r'^static/(?P<path>.*)$', return_static, name='static'),
+                                 re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}), ]
