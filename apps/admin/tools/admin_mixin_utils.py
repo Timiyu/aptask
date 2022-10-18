@@ -16,6 +16,6 @@ def superuser_only(function):
     return _inner
 
 class AdminLoginRequiredMixin(object):
-    @method_decorator(login_required(login_url='/singdl_admin/user_login/'))
+    @method_decorator(login_required(login_url='/users/login'))
     def dispatch(self, request, *args, **kwargs):
         return super(AdminLoginRequiredMixin, self).dispatch(request, *args, **kwargs)

@@ -18,4 +18,4 @@ def chinese_time(x):
 class Index(AdminLoginRequiredMixin, View):
     @method_decorator(superuser_only)
     def get(self, request):
-        return render(request, 'PC/admin/index.html')
+        return render(request, 'admin/index.html')
