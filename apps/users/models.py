@@ -14,7 +14,7 @@ class AdminUser(AbstractUser):
     gender = models.CharField('性别', max_length=10, choices=gender_choices, default='1')
     address = models.CharField('地址', max_length=100, default='')
     phone = models.CharField('手机号', max_length=20, null=True, blank=True, default='')
-    profile_picture = models.ImageField('用户头像', blank=True, default='website/images/users/logo_sm.png',
+    profile_picture = models.ImageField('用户头像', blank=True, default='website/images/logo_sm.png',
                                         upload_to='images/avatars/{}/{}/{}/{}'.format(datetime.now().year,
                                                                                       datetime.now().month,
                                                                                       datetime.now().day,
