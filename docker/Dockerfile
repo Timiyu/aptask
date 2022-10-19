@@ -1,5 +1,6 @@
 FROM alpine:latest
 
+
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     LANG=zh_CN.UTF-8 \
     SHELL=/bin/bash \
@@ -22,6 +23,7 @@ RUN set -x \
                              git \
                              curl \
                              wget \
+			                 vim \
                              tzdata \
                              perl \
                              openssl \
@@ -40,6 +42,7 @@ RUN set -x \
     && rm get-pip.py \
     && ln -sf /usr/bin/pip3 /usr/bin/pip \
     && ln -sf /usr/bin/python3 /usr/bin/python \
+<<<<<<< HEAD
     && rm -rf /var/cache/apk/* \
     && apk update \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
@@ -47,3 +50,9 @@ RUN set -x \
     && git config --global user.email "aptask@@users.noreply.github.com" \
     && git config --global user.name "aptask" \
     && git config --global http.postBuffer 524288000
+=======
+    && pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ \
+    && pip config set install.trusted-host mirrors.aliyun.com \
+    && rm -rf /var/cache/apk/* \
+    && apk update 
+>>>>>>> 927a77a566d4169475e60aa54adc95c50d33e15b
