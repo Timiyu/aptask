@@ -1,54 +1,53 @@
-FROM alpine:latest
+FROM ubuntu:latest
 
 
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    DEBIAN_FRONTEND=noninteractive \
     LANG=zh_CN.UTF-8 \
     SHELL=/bin/bash \
     PS1="\u@\h:\w \$ " 
 
 RUN set -x \
-    && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
-    && apk update -f \
-    && apk upgrade \
-    && apk add --update --no-cache py3-configobj \
-                                   py3-setuptools \
-                                   python3 \
-                                   python3-dev \
-                                   subversion \
-                                   g++ \
-                                   mariadb-connector-c-dev \
-    && apk --no-cache add -f bash \
-                             coreutils \
-                             moreutils \
-                             git \
-                             curl \
-                             wget \
-			                 vim \
-                             tzdata \
-                             perl \
-                             openssl \
-                             nginx \
-                             jq \
-                             openssh \
-                             libffi-dev \
-                             make \
-                             automake \
-                             jpeg-dev\
-                             zlib-dev \
-                             libcec-dev \
-                             libtool \
-    && wget https://bootstrap.pypa.io/get-pip.py \
-    && python3 get-pip.py \
-    && rm get-pip.py \
+    && sed -i 's@http://archive.ubuntu.com/ubuntu/@http://mirrors.aliyun.com/ubuntu/@g' /etc/apt/sources.list \
+    && apt-get update -qq \
+    && apt-get upgrade -y \
+    && apt-get install -y python3 \
+                          python3-dev \
+                          python3-pip \
+                          libpcre3 \
+                          libpcre3-dev \
+                          g++ \
+                          libmysqlclient-dev \
+                          uwsgi-plugin-python3 \
+    && apt-get install -y bash \
+                        coreutils \
+                        moreutils \
+                        git \
+                        curl \
+                        wget \
+                        vim \
+                        tzdata \
+                        perl \
+                        openssl \
+                        nginx \
+                        jq \
+                        openssh-server \
+                        openssh-client \
+                        libffi-dev \
+                        make \
+                        automake \
+                        libcec-dev \
+                        libtool \
     && ln -sf /usr/bin/pip3 /usr/bin/pip \
     && ln -sf /usr/bin/python3 /usr/bin/python \
     && pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ \
     && pip config set install.trusted-host mirrors.aliyun.com \
-    && rm -rf /var/cache/apk/* \
-    && apk update \
+    && apt-get clean -y \
+    && apt-get autoclean -y \
+    && apt-get update -y \
+    && apt-get autoremove -y\
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone \
     && git config --global user.email "aptask@@users.noreply.github.com" \
     && git config --global user.name "aptask" \
-    && git config --global http.postBuffer 524288000 \
-
+    && git config --global http.postBuffer 524288000
