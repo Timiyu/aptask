@@ -42,17 +42,13 @@ RUN set -x \
     && rm get-pip.py \
     && ln -sf /usr/bin/pip3 /usr/bin/pip \
     && ln -sf /usr/bin/python3 /usr/bin/python \
-<<<<<<< HEAD
+    && pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ \
+    && pip config set install.trusted-host mirrors.aliyun.com \
     && rm -rf /var/cache/apk/* \
     && apk update \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone \
     && git config --global user.email "aptask@@users.noreply.github.com" \
     && git config --global user.name "aptask" \
-    && git config --global http.postBuffer 524288000
-=======
-    && pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ \
-    && pip config set install.trusted-host mirrors.aliyun.com \
-    && rm -rf /var/cache/apk/* \
-    && apk update 
->>>>>>> 927a77a566d4169475e60aa54adc95c50d33e15b
+    && git config --global http.postBuffer 524288000 \
+
