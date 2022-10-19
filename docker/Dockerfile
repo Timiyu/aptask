@@ -1,19 +1,8 @@
-FROM python:alpine
+FROM alpine:latest
 
-ARG AP_MAINTAINER="timiyu"
-LABEL maintainer="${AP_MAINTAINER}"
-ARG AP_URL=https://github.com/${AP_MAINTAINER}/aptask.git
-ARG AP_BRANCH=master
+ENV LANG=zh_CN.UTF-8 \
+    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-ENV PNPM_HOME=/root/.local/share/pnpm \
-    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/share/pnpm:/root/.local/share/pnpm/global/5/node_modules:$PNPM_HOME \
-    LANG=zh_CN.UTF-8 \
-    SHELL=/bin/bash \
-    PS1="\u@\h:\w \$ " \
-    AP_DIR=/aptask \
-    AP_BRANCH=${AP_BRANCH}
-
-WORKDIR ${QL_DIR}
 
 RUN set -x \
     && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
@@ -33,6 +22,7 @@ RUN set -x \
                              git \
                              curl \
                              wget \
+			                 vim \
                              tzdata \
                              perl \
                              openssl \
@@ -49,17 +39,9 @@ RUN set -x \
     && wget https://bootstrap.pypa.io/get-pip.py \
     && python3 get-pip.py \
     && rm get-pip.py \
+    && ln -sf /usr/bin/pip3 /usr/bin/pip \
+    && ln -sf /usr/bin/python3 /usr/bin/python \
+    && pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ \
+    && pip config set install.trusted-host mirrors.aliyun.com \
     && rm -rf /var/cache/apk/* \
-    && apk update \
-    && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
-    && echo "Asia/Shanghai" > /etc/timezone \
-    && git config --global user.email "aptask@@users.noreply.github.com" \
-    && git config --global user.name "aptask" \
-    && git config --global http.postBuffer 524288000 \
-    && git clone -b ${AP_BRANCH} ${AP_URL} ${AP_DIR} \
-    && cd ${AP_DIR} \
-    && cp -f .env.example .env \
-    && chmod 777 ${AP_DIR}/shell/*.sh \
-    && chmod 777 ${AP_DIR}/docker/*.sh
-    
-ENTRYPOINT ["./docker/docker-entrypoint.sh"]
+    && apk update 
