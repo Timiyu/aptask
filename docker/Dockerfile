@@ -19,6 +19,12 @@ RUN set -x \
                           g++ \
                           libmysqlclient-dev \
                           uwsgi-plugin-python3 \
+                          libopenblas-dev \
+                          liblapack-dev \
+                          libatlas-base-dev  \
+                          libblas-dev \
+                          gfortran  \
+                          libpng-dev \
     && apt-get install -y bash \
                         coreutils \
                         moreutils \
