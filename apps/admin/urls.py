@@ -15,10 +15,12 @@ Including another URLconf
 """
 # from django.contrib import admin
 from django.urls import path
-from admin.views import index as Index
-from users.views import *
+from apps.admin.views.index import Index
+from apps.admin.views.scheduler import Scheduler
+from apps.users.views import *
 
 app_name = 'admin'
 urlpatterns = [
-    path('', Index.Index.as_view(), name='index'),
+    path('', Index.as_view(), name='index'),
+    path('scheduler',Scheduler.as_view(),name='scheduler')
 ]

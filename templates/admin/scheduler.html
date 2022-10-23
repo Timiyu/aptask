@@ -1,6 +1,6 @@
 {% extends 'admin/base.html' %}
 {% load static %}
-{% block title %}博客分类列表{% endblock %}
+{% block title %}定时任务{% endblock %}
 {% block css %}
 
 {% endblock %}
@@ -12,8 +12,7 @@
             <div class="page-title-box">
                 <ol class="breadcrumb float-right">
                     <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">首页</a></li>
-                    <li class="breadcrumb-item"><a href="javascript:void(0);">博客管理</a></li>
-                    <li class="breadcrumb-item active">分类管理</li>
+                    <li class="breadcrumb-item"><a href="javascript:void(0);">定时任务</a></li>
                 </ol>
                 <h4 class="page-title">分类列表</h4>
             </div>
@@ -25,7 +24,7 @@
                         <!-- 此区域禁用jinjia模板语言-->
                         {% verbatim myblock %}
 
-                            <div id="category_list" v-cloak>
+                            <div id="schduler_list" v-cloak>
                                 <el-row>
                                     <el-form :inline="true" :model="filter" size="small">
                                         <el-form-item label="分类名称">
@@ -259,7 +258,7 @@
 
     <script>
         var vm = new Vue({
-            el: '#category_list',
+            el: '#schduler_list',
             data: {
                 category_list: [],
                 multipleSelection: [],
