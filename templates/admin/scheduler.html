@@ -124,10 +124,10 @@
                                         <div class="grid-content bg-purple">
                                             <div style="margin-top: 10px;">
                                                 <el-button type="primary" @click="openAddCategoryForm" round
-                                                           size="small">新增分类
+                                                           size="small">新增任务
                                                 </el-button>
                                                 <el-button type="danger" @click="deleteAllSelectedPre" round
-                                                           size="small">删除选中
+                                                           size="small">删除任务
                                                 </el-button>
                                                 <el-button type="info" @click="toggleSelection()" round size="small">
                                                     取消选中
@@ -152,7 +152,7 @@
                                     </el-col>
                                 </el-row>
 
-                                <el-dialog title="编辑分类"
+                                <el-dialog title="编辑定时任务"
                                            :visible.sync="editDialogVisible"
                                            width="40%">
                                     <el-form v-model="editCategoryMod" :label-position="labelPosition"
@@ -192,7 +192,7 @@
                                 </el-dialog>
 
 
-                                <el-dialog title="增加分类" :visible.sync="addDialogFormVisible">
+                                <el-dialog title="新增定时任务" :visible.sync="addDialogFormVisible">
                                     <el-form :model="addCategoryForm" :label-position="labelPosition"
                                              :label-width="formLabelWidth">
                                         <el-form-item label="分类名称">
@@ -221,7 +221,7 @@
                                         :visible.sync="deleteQueryVisible"
                                         width="30%"
                                         center>
-                                    <span>确定删除这个分类吗？</span>
+                                    <span>确定删除这个定时任务吗？</span>
                                     <span slot="footer" class="dialog-footer">
                                         <el-button @click="deleteQueryVisible = false" type="info" round size="small">取 消</el-button>
                                         <el-button type="primary"
@@ -236,7 +236,7 @@
                                         :visible.sync="deleteAllQueryVisible"
                                         width="30%"
                                         center>
-                                    <span>确定删除选中分类吗？</span>
+                                    <span>确定删除选中定时任务吗？</span>
                                     <span slot="footer" class="dialog-footer">
                                         <el-button @click="deleteAllQueryVisible = false" type="info" round
                                                    size="small">取 消</el-button>
