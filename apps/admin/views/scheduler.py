@@ -16,6 +16,10 @@ class Scheduler(View):
         return JsonResponse(json.dumps({}, ensure_ascii=False),safe=False)
     
     @staticmethod
+    def scheduler_single(request):
+        return JsonResponse(json.dumps({}, ensure_ascii=False),safe=False)
+    
+    @staticmethod
     def schedulers_list(request):
         return JsonResponse(json.dumps({}, ensure_ascii=False),safe=False)
     
