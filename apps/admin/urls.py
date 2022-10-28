@@ -22,5 +22,7 @@ from apps.users.views import *
 app_name = 'admin'
 urlpatterns = [
     path('', Index.as_view(), name='index'),
-    path('scheduler',Scheduler.as_view(),name='scheduler')
+    path('scheduler',Scheduler.as_view(),name='scheduler'),
+    path('schedulers_list',Scheduler.schedulers_list,name='schedulers_list'),
+    path('schedulers_delete',Scheduler.schedulers_delete,name='schedulers_delete'),
 ]
