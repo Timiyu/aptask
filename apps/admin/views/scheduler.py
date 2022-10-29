@@ -2,8 +2,6 @@ from django.shortcuts import render
 from django.views.generic import View
 from django.http.response import JsonResponse
 import json
-from apscheduler import job,jobstores
-
 
 class Scheduler(View):
     def get(self,request):
@@ -21,6 +19,9 @@ class Scheduler(View):
     
     @staticmethod
     def schedulers_list(request):
+        req_data = request.GET
+        current_page = req_data.get('current_page',1)
+        page_size = req_data.get('page_size',10)
         return JsonResponse(json.dumps({}, ensure_ascii=False),safe=False)
     
     @staticmethod
