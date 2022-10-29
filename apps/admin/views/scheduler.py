@@ -1,7 +1,16 @@
+from atexit import register
 from django.shortcuts import render
 from django.views.generic import View
 from django.http.response import JsonResponse
+from django_apscheduler.models import DjangoJob,DjangoJobExecution
+from apscheduler.schedulers.background import BackgroundScheduler
+from django_apscheduler.jobstores import DjangoJobExecution,DjangoJobStore,DjangoJob,DjangoResultStoreMixin,DjangoMemoryJobStore,register_events,register_job
+from aptask.settings import TIME_ZONE
 import json
+
+scheduler = BackgroundScheduler(timezone=TIME_ZONE)
+register_events(scheduler)
+
 
 class Scheduler(View):
     def get(self,request):
