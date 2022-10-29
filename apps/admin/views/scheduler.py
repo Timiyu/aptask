@@ -1,4 +1,4 @@
-from atexit import register
+from django.forms import model_to_dict
 from django.shortcuts import render
 from django.views.generic import View
 from django.http.response import JsonResponse
@@ -31,7 +31,10 @@ class Scheduler(View):
         req_data = request.GET
         current_page = req_data.get('current_page',1)
         page_size = req_data.get('page_size',10)
-        return JsonResponse(json.dumps({}, ensure_ascii=False),safe=False)
+        res_data:list = []
+        for i in DjangoJob.objects.all():
+            res_data.append(model_to_dict(i))
+        return JsonResponse(json.dumps(res_data, ensure_ascii=False),safe=False)
     
     @staticmethod
     def schedulers_delete(request):
